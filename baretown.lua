@@ -59,6 +59,7 @@ sfx_channels = {
 split_sep_color = colors.dark_blue
 ui_corner_sprite = 110
 ui_middle_sprite = 111
+impassable_flag = 0
 
 -- utilities
 
@@ -122,6 +123,8 @@ function Char:init(p, x, y)
   self.color = char_colors[self.p + 1]
   self.speed = 0.5
   self.tool = nil
+  self.btns = {}
+  self.btnstack = {}
   music(0)
 end
 
@@ -137,7 +140,7 @@ end
 
 function Char:draw_map()
   local mx = flr(self.x / 8 - 4) - 1
-  local my = flr(self.y / 8 - 4) -1
+  local my = flr(self.y / 8 - 4) - 1
   local ox = self.x % 8
   local oy = self.y % 8
   map(mx, my, self.x - 40 - ox, self.y - 40 - oy, 10, 10)
@@ -155,6 +158,13 @@ function Char:draw_char()
   end
 end
 
+function check_collision(x, y)
+  local mx = flr(x / 8)
+  local my = flr(y / 8)
+  local mtile = mget(mx, my)
+  return fget(mtile, impassable_flag)
+end
+
 function Char:move(dx, dy)
   self.face_left = (dx < 0)
 
@@ -168,6 +178,29 @@ function Char:move(dx, dy)
   self.x += dx * self.speed * adj
   self.y += dy * self.speed * adj
 
+  -- check collision
+  local collision_tl = check_collision(self.x, self.y)
+  local collision_tr = check_collision(self.x + 8, self.y)
+  local collision_bl = check_collision(self.x, self.y + 8)
+  local collision_br = check_collision(self.x + 8, self.y + 8)
+
+  -- only fix collision in a direction we're moving
+  if dy < 0 and (collision_tl or collision_tr) then
+    self.y = flr(self.y / 8) * 8 + 8
+  end
+
+  if dy > 0 and (collision_bl or collision_br) then
+    self.y = flr(self.y / 8) * 8
+  end
+
+  if dx < 0 and (collision_tl or collision_bl) then
+    self.x = flr(self.x / 8) * 8 + 8
+  end
+
+  if dx > 0 and (collision_tr or collision_br) then
+    self.x = flr(self.x / 8) * 8
+  end
+
   -- map bounds
   if self.x < 0 then self.x = 0 end
   if self.y < 0 then self.y = 0 end
@@ -175,16 +208,54 @@ function Char:move(dx, dy)
   if self.y > 504 then self.y = 504 end
 end
 
+function Char:check_buttons()
+  self:check_button("up")
+  self:check_button("down")
+  self:check_button("left")
+  self:check_button("right")
+end
+
+function Char:check_button(name)
+  if btn(btns[name], self.p) then
+    -- if this is the first frame we've seen this button press, save the
+    -- frame number and add it to our button press stack.
+    -- this is nested because we don't want to reset it until the
+    -- button is let go
+    if self.btns[name] == nil then
+      self.btns[name] = frame
+      add(self.btnstack, name)
+    end
+
+  else
+    -- the button is no longer pressed, reset its frame count and remove it
+    -- from our stack
+    self.btns[name] = nil
+    del(self.btnstack, name)
+  end
+end
+
+function Char:top_button()
+  -- return the topmost item in the button stack
+  if #self.btnstack > 0 then
+    return self.btnstack[#self.btnstack]
+  end
+
+  return nil
+end
+
 function Char:update()
   -- movement
   local dx = 0
   local dy = 0
 
-  if btn(btns.up, self.p) then dy -= 1 end
-  if btn(btns.down, self.p) then dy += 1  end
-  if btn(btns.left, self.p) then dx -= 1 end
-  if btn(btns.right, self.p) then dx += 1 end
-
+  -- check which buttons are pressed, figure out which is the most
+  -- recently pressed, then move that way
+  self:check_buttons()
+  local move = self:top_button()
+  if move == "up" then dy = -1 end
+  if move == "down" then dy = 1 end
+  if move == "left" then dx = -1 end
+  if move == "right" then dx = 1 end
   self:move(dx, dy)
 
   -- pick up or drop tools
@@ -269,6 +340,7 @@ tools = {
 }
 
 gold = 0
+frame = 0
 
 -- game code
 
@@ -277,6 +349,8 @@ function _init()
 end
 
 function _update60()
+  frame += 0
+
   for i, char in pairs(chars) do
     char:update()
   end
