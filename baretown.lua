@@ -57,6 +57,8 @@ sfx_channels = {
 }
 
 split_sep_color = colors.dark_blue
+ui_corner_sprite = 110
+ui_middle_sprite = 111
 
 -- utilities
 
@@ -250,10 +252,18 @@ tools = {
   Tool("bucket", 512, 256),
 }
 
+gold = 0
+
 -- game code
 
 function _init()
   cls()
+end
+
+function _update60()
+  for i, char in pairs(chars) do
+    char:update()
+  end
 end
 
 function _draw()
@@ -276,10 +286,11 @@ function _draw()
   line(0, 64, 128, 64, split_sep_color)
   line(63, 0, 63, 128, split_sep_color)
   line(64, 0, 64, 128, split_sep_color)
-end
+  spr(ui_corner_sprite, 56, 56)
+  spr(ui_corner_sprite, 56, 64, 1, 1, false, true)
+  spr(ui_corner_sprite, 64, 56, 1, 1, true)
+  spr(ui_corner_sprite, 64, 64, 1, 1, true, true)
 
-function _update60()
-  for i, c in pairs(chars) do
-    c:update()
-  end
+  color(colors.orange)
+  print(""..gold, 62, 61)
 end
