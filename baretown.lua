@@ -167,6 +167,12 @@ function Char:move(dx, dy)
   -- move!
   self.x += dx * self.speed * adj
   self.y += dy * self.speed * adj
+
+  -- map bounds
+  if self.x < 0 then self.x = 0 end
+  if self.y < 0 then self.y = 0 end
+  if self.x > 1016 then self.x = 1016 end
+  if self.y > 504 then self.y = 504 end
 end
 
 function Char:update()
