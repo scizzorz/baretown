@@ -201,6 +201,12 @@ function Char:init(p, x, y)
   self.spr = 10
   self.color = char_colors[self.p + 1]
   self.tool = nil
+  self.menu = false
+  self.inv = {
+    ore=0,
+    tree=0,
+    honey=0,
+  }
   self.btns = {}
   self.btnstack = {}
 end
@@ -224,6 +230,16 @@ function Char:draw()
   -- draw our tool if it exists
   if self.tool ~= nil then
     self.tool:draw_held(self.x, self.y, self.face_left)
+  end
+end
+
+function Char:draw_menu()
+  -- draw menu if we have it open
+  if self.menu then
+    color(colors.dark_blue)
+    rectfill(8 + self.scrx, 8 + self.scry, 56 + self.scrx, 56 + self.scry)
+    color(colors.light_grey)
+    rect(8 + self.scrx, 8 + self.scry, 56 + self.scrx, 56 + self.scry)
   end
 end
 
@@ -333,6 +349,16 @@ function Char:top_button()
 end
 
 function Char:update()
+  self.menu = btn(btns.o, self.p) and btn(btns.x, self.p)
+
+  if self.menu then
+    self:update_menu()
+  else
+    self:update_world()
+  end
+end
+
+function Char:update_world()
   -- movement
   local dx = 0
   local dy = 0
@@ -389,6 +415,9 @@ function Char:update()
       sfx(sfx_list.err, sfx_channels.tool)
     end
   end
+end
+
+function Char:update_menu()
 end
 
 -- tools
@@ -610,11 +639,6 @@ function Loot:draw()
   spr(loot_sprites[self.name], self.x - 2, self.y - 2)
 end
 
-function Loot:pickup()
-  gold += 1
-  sfx(sfx_list.pickup_loot, sfx_channels.tool)
-end
-
 -- game state
 
 world = Map()
@@ -623,7 +647,6 @@ chars = {}
 tools = {}
 particles = {}
 loots = {}
-gold = 0
 frame = 0
 aframe = 0
 
@@ -732,7 +755,8 @@ function _update60()
     if lt:is_dead() then
       for j, char in pairs(chars) do
         if dist(lt.x, lt.y, char.x + 4, char.y + 4) < collect_dist then
-          lt:pickup()
+          char.inv[lt.name] += 1
+          sfx(sfx_list.pickup_loot, sfx_channels.tool)
           del(loots, lt)
           break
         end
@@ -755,10 +779,6 @@ function _draw()
       node:draw()
     end
 
-    for i, char in pairs(chars) do
-      char:draw()
-    end
-
     for i, lt in pairs(loots) do
       lt:draw()
     end
@@ -767,7 +787,15 @@ function _draw()
       pt:draw()
     end
 
+    for i, char in pairs(chars) do
+      char:draw()
+    end
+
     cam:reset_clip()
+
+    if cam.menu then
+      cam:draw_menu()
+    end
   end
 
   -- draw split screen separators
@@ -776,6 +804,7 @@ function _draw()
   rect(0, 64, 63, 127, split_sep_color)
   rect(64, 64, 127, 127, split_sep_color)
 
+  -- draw friend trackers
   for i, me in pairs(chars) do
     -- draw friend indicators
     for j, you in pairs(chars) do
