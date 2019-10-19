@@ -739,13 +739,32 @@ function _draw()
   rect(64, 64, 127, 127, split_sep_color)
 
   for i, me in pairs(chars) do
+    -- draw friend indicators
     for j, you in pairs(chars) do
       if i ~= j then
-        local angle = atan2(you.x - me.x, you.y - me.y)
-        local offx = min(max(cos(angle) * 50, -32), 31)
-        local offy = min(max(sin(angle) * 50, -32), 31)
-        pset(me.scrx + 32 + offx, me.scry + 32 + offy, char_colors[j])
+        if abs(you.x - me.x) > 32 or abs(you.y - me.y) > 32 then
+          local angle = atan2(you.x - me.x, you.y - me.y)
+          local offx = min(max(cos(angle) * 45, -32), 31)
+          local offy = min(max(sin(angle) * 45, -32), 31)
+          pset(me.scrx + 32 + offx, me.scry + 32 + offy, char_colors[j])
+
+          offx = min(max(cos(angle) * 45, -31), 30)
+          offy = min(max(sin(angle) * 45, -31), 30)
+          pset(me.scrx + 32 + offx, me.scry + 32 + offy, char_colors[j])
+        end
       end
+    end
+
+    -- draw town indicator
+    if abs(center_x - me.x) > 32 or abs(center_y - me.y) > 32 then
+      local angle = atan2(center_x - me.x, center_y - me.y)
+      local offx = min(max(cos(angle) * 45, -32), 31)
+      local offy = min(max(sin(angle) * 45, -32), 31)
+      pset(me.scrx + 32 + offx, me.scry + 32 + offy, colors.white)
+
+      offx = min(max(cos(angle) * 45, -31), 30)
+      offy = min(max(sin(angle) * 45, -31), 30)
+      pset(me.scrx + 32 + offx, me.scry + 32 + offy, colors.white)
     end
   end
 end
