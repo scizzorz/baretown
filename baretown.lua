@@ -503,13 +503,13 @@ function Tool:draw()
 end
 
 function Tool:draw_held(x, y, face_left)
-  local offset = 4
+  local offset = 6
   if face_left then
     offset = -offset
   end
 
   self:set_palette()
-  spr(tool_sprites[self.name], x + offset, y - 4, 1, 1, face_left)
+  spr(tool_sprites[self.name], x + offset, y - 2, 1, 1, face_left)
   self:reset_palette()
 end
 
