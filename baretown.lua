@@ -473,9 +473,9 @@ function Map:draw_for(char)
   -- this is done to save on render time - no need to draw the full 128x64 map
   -- for each character's frame when we can just draw a single 10x10 and cover
   -- their entire screen
-  local mx = flr(char.x / 8 - 4) - 1
-  local my = flr(char.y / 8 - 4) - 1
-  map(mx, my, mx * 8, my * 8, 10, 10)
+  local mx = flr(char.x / 8) - 4
+  local my = flr(char.y / 8) - 4
+  map(mx, my, mx * 8, my * 8, 11, 11)
 end
 
 -- game state
