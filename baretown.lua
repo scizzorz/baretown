@@ -58,13 +58,14 @@ music_songs = {
 }
 
 sfx_list = {
-  pick_up = 16,
-  drop = 17,
+  pickup_tool = 16,
+  drop_tool = 17,
   ore_smack = 18,
   explode = 19,
   tree_smack = 20,
   honey_smack = 21,
   err = 22,
+  pickup_loot = 21,
 }
 
 sfx_channels = {
@@ -340,7 +341,7 @@ function Char:update()
       add(tools, self.tool)
       self.tool:drop(self)
       self.tool = nil
-      sfx(sfx_list.drop, sfx_channels.tool)
+      sfx(sfx_list.drop_tool, sfx_channels.tool)
 
     -- pick up a new tool
     else
@@ -349,7 +350,7 @@ function Char:update()
         if disto(self, tool) < pickup_dist then
           self.tool = tool
           del(tools, tool)
-          sfx(sfx_list.pick_up, sfx_channels.tool)
+          sfx(sfx_list.pickup_tool, sfx_channels.tool)
           break
         end
       end
@@ -572,6 +573,7 @@ end
 
 function Loot:pickup()
   gold += 1
+  sfx(sfx_list.pickup_loot, sfx_channels.tool)
 end
 
 -- game state
