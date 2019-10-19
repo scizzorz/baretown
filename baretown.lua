@@ -42,9 +42,20 @@ tool_sprites = {
   staff = 5,
   hammer = 6,
   sickle = 7,
+  anvil = 8,
 }
 
 spawnable_tools = {
+  "pick",
+  "axe",
+  "sword",
+  "staff",
+  "hammer",
+  "sickle",
+  "anvil",
+}
+
+startable_tools = {
   "pick",
   "axe",
   "sword",
@@ -419,9 +430,27 @@ function Char:update_world()
   -- use our tool
   if btnp(btns.x, self.p) then
     if self.tool ~= nil then
-      self.tool:use(self)
+      if not self.tool:use(self) then
+        sfx(sfx_list.err, sfx_channels.tool)
+      end
     else
-      sfx(sfx_list.err, sfx_channels.tool)
+      local interacted = false
+
+      -- find all grounded tools and see if we can interact with any of them
+      for i, tool in pairs(tools) do
+        -- check interact distance
+        if disto(self, tool) < pickup_dist and tool_interacts[tool.name] ~= nil then
+          interacted = tool_interacts[tool.name](tool, self)
+          if interacted then
+            break
+          end
+        end
+      end
+
+      if not interacted then
+        sfx(sfx_list.err, sfx_channels.tool)
+      end
+
     end
   end
 end
@@ -486,10 +515,11 @@ function Tool:drop(owner)
 end
 
 function Tool:use(char)
-  if tool_actions[self.name] ~= nil then
-    printh("using tool "..self.name, "log")
-    tool_actions[self.name](self, char)
+  if tool_uses[self.name] ~= nil then
+    return tool_uses[self.name](self, char)
   end
+
+  return false
 end
 
 function Smacker(node_name)
@@ -504,16 +534,26 @@ function Smacker(node_name)
           node:explode()
           del(nodes, node)
         end
+
+        return true
       end
     end
+
+    return false
   end
 end
 
-tool_actions = {}
-tool_actions.pick = Smacker("ore")
-tool_actions.sickle = Smacker("honey")
-tool_actions.axe = Smacker("tree")
-tool_actions.hammer = Smacker("ore")
+tool_uses = {}
+tool_uses.pick = Smacker("ore")
+tool_uses.sickle = Smacker("honey")
+tool_uses.axe = Smacker("tree")
+tool_uses.hammer = Smacker("ore")
+
+tool_interacts = {}
+tool_interacts.anvil = function()
+  sfx(sfx_list.ore, sfx_channels.tool)
+  return true
+end
 
 
 Bucket = Tool:extend()
@@ -757,7 +797,7 @@ for x=0, 1 do
       level = 1
     end
 
-    local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
+    local name = startable_tools[flr(rnd(#startable_tools)) + 1]
     local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
     add(tools, tool)
   end
