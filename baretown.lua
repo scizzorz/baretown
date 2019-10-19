@@ -363,7 +363,7 @@ function Char:update()
       for i, node in pairs(nodes) do
         if disto(self, node) < smack_dist then
           sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
-          gold += node:hit(1)
+          node:hit(1 + self.tool.level)
 
           if node:is_dead() then
             sfx(sfx_list.explode, sfx_channels.tool)
@@ -468,7 +468,7 @@ function Node:init(name, x, y, hp, value)
   self.name = name
   self.x = x
   self.y = y
-  self.hp = hp or 5
+  self.hp = hp or 8
   self.value = value or 1
 
   mset(x / 8, y / 8, map_tiles.node)
@@ -478,15 +478,41 @@ function Node:draw()
   spr(node_sprites[self.name], self.x, self.y)
 end
 
-function Node:hit(amt)
-  amt = amt or 1
-  self.hp -= amt
+function Node:spew_particle(amt)
+  local sx = (node_sprites[self.name] % 16) * 8
+  local sy = flr(node_sprites[self.name] / 16) * 8
 
-  if self.hp <= 0 then
-    return self.value
+  for n=0, (amt or 1) do
+    local c = colors.black
+    while c == colors.black do
+      c = sget(sx + rnd(8), sy + rnd(8))
+    end
+    local pt = Particle(c, self.x + 4, self.y + 4)
+    add(particles, pt)
   end
+end
 
-  return 0
+function Node:spew_loot(amt)
+  local lt = Loot(self.name, self.x + 4, self.y + 4)
+  add(loots, lt)
+end
+
+function Node:hit(amt)
+  self:spew_particle(amt)
+
+  amt = amt or 1
+  while amt > 0 do
+    amt -= 1
+    self.hp -= 1
+
+    if self.hp % 2 == 0 then
+      self:spew_loot(1)
+    end
+
+    if self.hp == 0 then
+      self:spew_loot(3)
+    end
+  end
 end
 
 function Node:is_dead()
@@ -495,23 +521,7 @@ end
 
 function Node:explode()
   mset(self.x / 8, self.y / 8, map_tiles.plain)
-
-  local sx = (node_sprites[self.name] % 16) * 8
-  local sy = flr(node_sprites[self.name] / 16) * 8
-
-  for n=0, 16 do
-    local c = colors.black
-    while c == colors.black do
-      c = sget(sx + rnd(8), sy + rnd(8))
-    end
-    local pt = Particle(c, self.x + 4, self.y + 4)
-    add(particles, pt)
-  end
-
-  for n=0, self.value + rnd(4) do
-    local lt = Loot(self.name, self.x + 4, self.y + 4)
-    add(loots, lt)
-  end
+  self:spew_particle(16)
 end
 
 -- map
