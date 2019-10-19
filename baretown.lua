@@ -56,6 +56,9 @@ sfx_channels = {
   tool = 1,
 }
 
+split_sep_color = colors.dark_blue
+
+-- utilities
 
 function dist(x1, y1, x2, y2)
   local dx = x1 - x2
@@ -67,6 +70,8 @@ function disto(o1, o2)
   return dist(o1.x, o1.y, o2.x, o2.y)
 end
 
+-- base class
+
 Object = {}
 Object.__index = Object
 
@@ -76,12 +81,10 @@ function Object:__call(...)
   return this, this:init(...)
 end
 
-
 -- methods
 function Object:init() end
 function Object:update() end
 function Object:draw() end
-
 
 -- subclassing
 function Object:extend()
@@ -101,6 +104,8 @@ function Object:extend()
 
   return setmetatable(proto, self)
 end
+
+-- characters
 
 Char = Object:extend()
 
@@ -188,6 +193,8 @@ function Char:update()
   end
 end
 
+-- tools
+
 Tool = Object:extend()
 
 function Tool:init(name, x, y, level)
@@ -230,6 +237,8 @@ function Tool:drop(owner)
   self.y = owner.y
 end
 
+-- game state
+
 chars = {
   Char(0, 512 - 8, 256 - 8),
   Char(1, 512 + 8, 256 - 8),
@@ -241,7 +250,7 @@ tools = {
   Tool("bucket", 512, 256),
 }
 
-split_sep_color = colors.dark_blue
+-- game code
 
 function _init()
   cls()
