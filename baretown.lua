@@ -50,6 +50,7 @@ music_songs = {
 sfx_list = {
   pick_up = 63,
   drop = 62,
+  ore_smack = 61,
 }
 
 sfx_channels = {
@@ -62,15 +63,25 @@ map_tiles = {
   decor_2 = 96,
   decor_3 = 112,
   impasse = 65,
+  node = 66,
+}
+
+node_sprites = {
+  ore = 74,
 }
 
 split_sep_color = colors.dark_blue
 ui_corner_sprite = 110
 ui_middle_sprite = 111
 impassable_flag = 0
+pickup_dist = 8
+collect_dist = 12
 
 max_x = 1024
 max_y = 512
+
+map_w = max_x / 8
+map_h = max_y / 8
 
 center_x = max_x / 2
 center_y = max_y / 2
@@ -296,11 +307,28 @@ function Char:update()
     else
       for i, tool in pairs(tools) do
         -- pick up if distance < 8 pixels
-        if disto(self, tool) < 8 then
+        if disto(self, tool) < pickup_dist then
           self.tool = tool
           del(tools, tool)
           sfx(sfx_list.pick_up, sfx_channels.tool)
           break
+        end
+      end
+    end
+  end
+
+  -- use our tool
+  if btnp(btns.x, self.p) then
+    if self.tool ~= nil then
+      for i, node in pairs(nodes) do
+        if disto(self, node) < collect_dist then
+          sfx(sfx_list.ore_smack, sfx_channels.tool)
+          gold += node:hit(1)
+
+          if node:is_dead() then
+            node:explode()
+            del(nodes, node)
+          end
         end
       end
     end
@@ -389,24 +417,51 @@ function Bucket:set_palette()
   end
 end
 
+-- resources
+
+Node = Object:extend()
+
+function Node:init(name, x, y, hp, value)
+  self.name = name
+  self.x = x
+  self.y = y
+  self.hp = hp or 5
+  self.value = value or 1
+
+  mset(x / 8, y / 8, map_tiles.node)
+end
+
+function Node:draw()
+  palt(colors.black, false)
+  palt(colors.brown, true)
+
+  spr(node_sprites[self.name], self.x, self.y)
+
+  palt()
+end
+
+function Node:hit(amt)
+  amt = amt or 1
+  self.hp -= amt
+
+  if self.hp <= 0 then
+    return self.value
+  end
+
+  return 0
+end
+
+function Node:is_dead()
+  return self.hp <= 0
+end
+
+function Node:explode()
+  mset(self.x / 8, self.y / 8, map_tiles.plain)
+end
+
 -- map
 
 Map = Object:extend()
-
-function Map:init(w, h)
-  self.w = w or 128
-  self.h = h or 64
-
-  for x=0, self.w - 1 do
-    for y=0, self.h - 1 do
-      if x < 4 or y < 4 or x >= self.w - 4 or y >= self.h - 4 then
-        mset(x, y, map_tiles.impasse)
-      else
-        mset(x, y, map_tiles.plain)
-      end
-    end
-  end
-end
 
 function Map:draw_for(char)
   -- draw the map from a character's perspective.
@@ -418,10 +473,25 @@ function Map:draw_for(char)
   map(mx, my, mx * 8, my * 8, 10, 10)
 end
 
+function generate_map()
+  for x=0, map_w - 1 do
+    for y=0, map_h - 1 do
+      if x < 4 or y < 4 or x >= map_w - 4 or y >= map_h - 4 then
+        mset(x, y, map_tiles.impasse)
+      else
+        mset(x, y, map_tiles.plain)
+      end
+    end
+  end
+
+  add(nodes, Node("ore", 512, 248))
+end
 
 -- game state
 
 world = Map()
+
+nodes = {}
 
 chars = {
   Char(0, center_x - 8, center_y - 8),
@@ -436,6 +506,8 @@ tools = {
 
 gold = 0
 frame = 0
+
+generate_map()
 
 -- game code
 
@@ -459,8 +531,13 @@ function _draw()
     for i, char in pairs(chars) do
       char:draw()
     end
+
     for i, tool in pairs(tools) do
       tool:draw()
+    end
+
+    for i, node in pairs(nodes) do
+      node:draw()
     end
 
     cam:reset_clip()
