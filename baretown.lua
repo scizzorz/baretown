@@ -626,6 +626,14 @@ end
 
 add(tools, Bucket(center_x, center_y))
 
+for x=0, 2 do
+  for y=0, 2 do
+    local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
+    local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32)
+    add(tools, tool)
+  end
+end
+
 add(chars, Char(0, center_x - 8, center_y - 8))
 add(chars, Char(1, center_x + 8, center_y - 8))
 add(chars, Char(2, center_x - 8, center_y + 8))
