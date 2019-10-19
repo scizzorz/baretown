@@ -790,7 +790,7 @@ for x=0, map_w - 1 do
 end
 
 
-add(tools, Bucket(center_x, center_y))
+-- add(tools, Bucket(center_x, center_y))
 
 for x=0, 1 do
   for y=0, 1 do
