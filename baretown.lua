@@ -496,7 +496,7 @@ function Node:explode()
   local sx = (node_sprites[self.name] % 16) * 8
   local sy = flr(node_sprites[self.name] / 16) * 8
 
-  for n=0, 7 + rnd(4) do
+  for n=0, 16 do
     local c = colors.black
     while c == colors.black do
       c = sget(sx + rnd(8), sy + rnd(8))
@@ -628,8 +628,8 @@ end
 
 add(tools, Bucket(center_x, center_y))
 
-for x=0, 2 do
-  for y=0, 2 do
+for x=0, 1 do
+  for y=0, 1 do
     local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
     local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32)
     add(tools, tool)
