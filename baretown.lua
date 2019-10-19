@@ -77,6 +77,7 @@ split_sep_color = colors.dark_blue
 ui_corner_sprite = 110
 ui_middle_sprite = 111
 impassable_flag = 0
+permanent_flag = 1
 pickup_dist = 8
 collect_dist = 12
 
@@ -496,7 +497,7 @@ for x=0, map_w - 1 do
   for y=0, map_h - 1 do
     -- only adjust tiles that aren't marked as impassable by the map editor
     local tile = mget(x, y)
-    if not fget(tile, impassable_flag) then
+    if not fget(tile, permanent_flag) then
       if rnd(32) < 1 then
         local decor = flr(rnd(#decor_tiles)) + 1
         mset(x, y, decor_tiles[decor])
