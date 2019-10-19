@@ -424,6 +424,10 @@ function Char:update_world()
           break
         end
       end
+
+      if self.tool == nil then
+        sfx(sfx_list.err, sfx_channels.tool)
+      end
     end
   end
 
