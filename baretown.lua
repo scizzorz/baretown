@@ -97,6 +97,7 @@ function Char:init(p, x, y)
   self.color = char_colors[self.p + 1]
   self.speed = 0.5
   self.tool = nil
+  music(0)
 end
 
 function Char:set_clip()
@@ -152,6 +153,7 @@ function Char:update()
       add(tools, self.tool)
       self.tool:drop(self)
       self.tool = nil
+      sfx(62, 1)
 
     -- pick up a new tool
     else
@@ -160,6 +162,7 @@ function Char:update()
         if disto(self, tool) < 8 then
           self.tool = tool
           del(tools, tool)
+          sfx(63, 1)
           break
         end
       end
