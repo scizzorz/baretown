@@ -44,6 +44,10 @@ tool_sprites = {
   sickle = 7,
 }
 
+loot_sprites = {
+  gold = 90,
+}
+
 spawnable_tools = {
   "pick",
   "axe",
@@ -100,7 +104,8 @@ ui_middle_sprite = 111
 impassable_flag = 0
 permanent_flag = 1
 pickup_dist = 8
-collect_dist = 12
+smack_dist = 12
+collect_dist = 6
 
 max_x = 1024
 max_y = 512
@@ -352,7 +357,7 @@ function Char:update()
   if btnp(btns.x, self.p) then
     if self.tool ~= nil then
       for i, node in pairs(nodes) do
-        if disto(self, node) < collect_dist then
+        if disto(self, node) < smack_dist then
           sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
           gold += node:hit(1)
 
@@ -496,6 +501,11 @@ function Node:explode()
     local pt = Particle(c, self.x + 4, self.y + 4)
     add(particles, pt)
   end
+
+  for n=0, self.value + rnd(4) do
+    local lt = Loot("gold", self.x + 4, self.y + 4)
+    add(loots, lt)
+  end
 end
 
 -- map
@@ -525,8 +535,12 @@ function Particle:init(c, x, y, dx, dy)
 end
 
 function Particle:update()
-  self.x += self.dx
-  self.y += self.dy
+  if abs(self.dx) >= 0.1 then
+    self.x += self.dx
+  end
+  if abs(self.dy) >= 0.1 then
+    self.y += self.dy
+  end
   self.dx *= 0.9
   self.dy *= 0.9
 end
@@ -539,6 +553,22 @@ function Particle:draw()
   pset(self.x, self.y, self.c)
 end
 
+
+Loot = Particle:extend() -- so what
+
+function Loot:init(name, x, y, dx, dy)
+  self.name = name
+  Particle.init(self, nil, x, y, dx, dy)
+end
+
+function Loot:draw()
+  spr(loot_sprites[self.name], self.x - 2, self.y - 2)
+end
+
+function Loot:pickup()
+  gold += 1
+end
+
 -- game state
 
 world = Map()
@@ -546,6 +576,7 @@ nodes = {}
 chars = {}
 tools = {}
 particles = {}
+loots = {}
 gold = 0
 frame = 0
 
@@ -618,6 +649,19 @@ function _update60()
       del(particles, pt)
     end
   end
+
+  for i, lt in pairs(loots) do
+    lt:update()
+    if lt:is_dead() then
+      for j, char in pairs(chars) do
+        if dist(lt.x, lt.y, char.x + 4, char.y + 4) < collect_dist then
+          lt:pickup()
+          del(loots, lt)
+          break
+        end
+      end
+    end
+  end
 end
 
 function _draw()
@@ -636,6 +680,10 @@ function _draw()
 
     for i, char in pairs(chars) do
       char:draw()
+    end
+
+    for i, lt in pairs(loots) do
+      lt:draw()
     end
 
     for i, pt in pairs(particles) do
