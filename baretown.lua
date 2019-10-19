@@ -116,8 +116,7 @@ spawnable_nodes = {
 }
 
 split_sep_color = colors.dark_blue
-ui_corner_sprite = 110
-ui_middle_sprite = 111
+ui_arrow = 110
 impassable_flag = 0
 permanent_flag = 1
 pickup_dist = 8
@@ -237,9 +236,30 @@ function Char:draw_menu()
   -- draw menu if we have it open
   if self.menu then
     color(colors.dark_blue)
-    rectfill(8 + self.scrx, 8 + self.scry, 56 + self.scrx, 56 + self.scry)
+    rectfill(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry)
     color(colors.light_grey)
-    rect(8 + self.scrx, 8 + self.scry, 56 + self.scrx, 56 + self.scry)
+    rect(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry)
+
+    spr(ui_arrow, 4 + self.scrx, 6 + self.scry)
+    spr(loot_sprites.ore, 12 + self.scrx, 8 + self.scry)
+    print(inv.ore, 18 + self.scrx, 8 + self.scry, colors.white)
+    spr(loot_sprites.tree, 26 + self.scrx, 8 + self.scry)
+    print(inv.tree, 32 + self.scrx, 8 + self.scry, colors.white)
+    spr(loot_sprites.honey, 40 + self.scrx, 8 + self.scry)
+    print(inv.honey, 46 + self.scrx, 8 + self.scry, colors.white)
+
+    for i, char in pairs(chars) do
+      pal(colors.white, char_colors[i])
+      spr(ui_arrow, 4 + self.scrx, 6 + self.scry + i * 11)
+      pal()
+
+      spr(loot_sprites.ore, 12 + self.scrx, 8 + self.scry + i * 11)
+      print(char.inv.ore, 18 + self.scrx, 8 + self.scry + i * 11, colors.white)
+      spr(loot_sprites.tree, 26 + self.scrx, 8 + self.scry + i * 11)
+      print(char.inv.tree, 32 + self.scrx, 8 + self.scry + i * 11, colors.white)
+      spr(loot_sprites.honey, 40 + self.scrx, 8 + self.scry + i * 11)
+      print(char.inv.honey, 46 + self.scrx, 8 + self.scry + i * 11, colors.white)
+    end
   end
 end
 
@@ -649,6 +669,11 @@ particles = {}
 loots = {}
 frame = 0
 aframe = 0
+inv = {
+  ore = 0,
+  tree = 0,
+  honey = 0,
+}
 
 for x=0, map_w - 1 do
   for y=0, map_h - 1 do
