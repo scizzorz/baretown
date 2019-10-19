@@ -130,7 +130,7 @@ end
 
 function Char:set_clip()
   clip(self.scrx, self.scry, self.scrx + 64, self.scry + 64)
-  camera(self.x - self.scrx - 32, self.y - self.scry - 32)
+  camera(self.x - self.scrx - 28, self.y - self.scry - 28)
 end
 
 function Char:reset_clip()
@@ -187,23 +187,39 @@ function Char:move(dx, dy)
   local collision_br = check_collision(self.x + 8, self.y + 8)
 
   -- only fix collision in a direction we're moving
+  -- FIXME some weird collision failure when moving right or down inline with
+  -- an impassable block... probably because of the weird nested collision
+  -- rules I had to add... fuc
   if dy < 0 and (collision_tl or collision_tr) then
-    self.y = flr(self.y / 8) * 8 + 8
+    -- don't adjust Y position if *both* corners are blocked!
+    if not (collision_tl and collision_bl) and not (collision_tr and collision_br) then
+      self.y = flr(self.y / 8) * 8 + 8
+    end
   end
 
   if dy > 0 and (collision_bl or collision_br) then
-    self.y = flr(self.y / 8) * 8
+    -- see above
+    if not (collision_tl and collision_bl) and not (collision_tr and collision_br) then
+      self.y = flr(self.y / 8) * 8
+    end
   end
 
   if dx < 0 and (collision_tl or collision_bl) then
-    self.x = flr(self.x / 8) * 8 + 8
+    -- see above
+    if not (collision_tl and collision_tr) and not (collision_bl and collision_br) then
+      self.x = flr(self.x / 8) * 8 + 8
+    end
   end
 
   if dx > 0 and (collision_tr or collision_br) then
-    self.x = flr(self.x / 8) * 8
+    -- see above
+    if not (collision_tl and collision_tr) and not (collision_bl and collision_br) then
+      self.x = flr(self.x / 8) * 8
+    end
   end
 
   -- map bounds
+  -- in theory, the map should have a 4-block impassable border... but... whatever.
   if self.x < 0 then self.x = 0 end
   if self.y < 0 then self.y = 0 end
   if self.x > 1016 then self.x = 1016 end
