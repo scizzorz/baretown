@@ -1,10 +1,10 @@
 c_black = 0
-c_darkblue = 1
-c_magenta = 2
-c_darkgreen = 3
+c_dark_blue = 1
+c_dark_purple = 2
+c_dark_green = 3
 c_brown = 4
-c_darkgrey = 5
-c_grey = 6
+c_dark_grey = 5
+c_light_grey = 6
 c_white = 7
 c_red = 8
 c_orange = 9
@@ -13,7 +13,7 @@ c_green = 11
 c_blue = 12
 c_indigo = 13
 c_pink = 14
-c_beige = 15
+c_peach = 15
 
 b_left = 0
 b_right = 1
@@ -105,7 +105,7 @@ chars = {
   char(3, 256 + 8, 256 + 8),
 }
 
-split_sep_color = c_darkblue
+split_sep_color = c_dark_blue
 
 function _init()
   cls()
