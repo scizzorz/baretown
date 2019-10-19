@@ -118,7 +118,8 @@ function Char:draw_map()
 end
 
 function Char:draw_char()
-  pal(8, self.color)
+  -- draw sprite, remapping the red color to this player's color
+  pal(c_red, self.color)
   spr(self.spr, self.x, self.y, 1, 1, self.face_left)
   pal()
 
@@ -168,15 +169,31 @@ end
 
 Tool = Object:extend()
 
-function Tool:init(name, x, y, power)
+function Tool:init(name, x, y, level)
   self.name = name
   self.x = x
   self.y = y
-  self.power = power or 0
+  self.level = level or 0
 end
 
 function Tool:draw()
+  if self.level == 1 then
+    pal(c_light_grey, c_orange)
+    pal(c_white, c_yellow)
+    pal(c_brown, c_dark_grey)
+    pal(c_dark_grey, c_brown)
+  end
+
+  if self.level == 2 then
+    pal(c_light_grey, c_dark_blue)
+    pal(c_white, c_blue)
+    pal(c_brown, c_white)
+    pal(c_dark_grey, c_indigo)
+  end
+
   spr(tool_sprites[self.name], self.x, self.y)
+
+  pal()
 end
 
 function Tool:draw_held(x, y, face_left)
@@ -200,7 +217,7 @@ chars = {
 }
 
 tools = {
-  Tool("pick", 256, 256),
+  Tool("bucket", 256, 256),
 }
 
 split_sep_color = c_dark_blue
