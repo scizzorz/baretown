@@ -90,6 +90,19 @@ node_sprites = {
   honey = 18,
 }
 
+node_palette_swaps = {
+  {
+    ore = {[colors.light_grey] = colors.orange, [colors.white] = colors.yellow},
+    tree = {[colors.green] = colors.orange, [colors.brown] = colors.dark_grey},
+    honey = {[colors.orange] = colors.pink, [colors.yellow] = colors.blue},
+  },
+  {
+    ore = {[colors.light_grey] = colors.blue, [colors.white] = colors.white},
+    tree = {[colors.green] = colors.blue, [colors.brown] = colors.light_grey},
+    honey = {[colors.orange] = colors.blue, [colors.yellow] = colors.peach},
+  },
+}
+
 loot_sprites = {
   ore = 32,
   tree = 33,
@@ -425,9 +438,7 @@ function Tool:draw_held(x, y, face_left)
   end
 
   self:set_palette()
-
   spr(tool_sprites[self.name], x + offset, y - 4, 1, 1, face_left)
-
   self:reset_palette()
 end
 
@@ -464,18 +475,34 @@ end
 
 Node = Object:extend()
 
-function Node:init(name, x, y, hp, value)
+function Node:init(name, x, y, level)
   self.name = name
   self.x = x
   self.y = y
-  self.hp = hp or 8
-  self.value = value or 1
+  self.level = level or 0
+  self.hp = shl(hp or 8, self.level * 2) -- 8 * 2^(2 * level)
 
   mset(x / 8, y / 8, map_tiles.node)
 end
 
+function Node:set_palette()
+  if self.level > 0 then
+    local swap = node_palette_swaps[self.level][self.name]
+    for from, to in pairs(swap) do
+      pal(from, to)
+    end
+  end
+end
+
+function Node:reset_palette()
+  pal()
+  palt()
+end
+
 function Node:draw()
+  self:set_palette()
   spr(node_sprites[self.name], self.x, self.y)
+  self:reset_palette()
 end
 
 function Node:spew_particle(amt)
@@ -492,9 +519,11 @@ function Node:spew_particle(amt)
   end
 end
 
-function Node:spew_loot()
-  local lt = Loot(self.name, self.x + 4, self.y + 4)
-  add(loots, lt)
+function Node:spew_loot(amt)
+  for n=1, (amt or 1) do
+    local lt = Loot(self.name, self.x + 4, self.y + 4)
+    add(loots, lt)
+  end
 end
 
 function Node:hit(amt)
@@ -510,7 +539,7 @@ function Node:hit(amt)
     end
 
     if self.hp == 0 then
-      self:spew_loot()
+      self:spew_loot(1 + self.level * 2)
     end
   end
 end
@@ -610,8 +639,17 @@ for x=0, map_w - 1 do
 
       -- random node spawns
       elseif rnd(32) < 1 then
+        -- choose a random power level
+        local level = 0
+        if rnd(128) < 1 then
+          level = 2
+        elseif rnd(64) < 1 then
+          level = 1
+        end
+
+        -- choose a random node
         local name = spawnable_nodes[flr(rnd(#spawnable_nodes)) + 1]
-        local node = Node(name, x * 8, y * 8)
+        local node = Node(name, x * 8, y * 8, level)
         add(nodes, node)
 
       -- random tooll spawn
