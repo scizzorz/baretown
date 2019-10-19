@@ -473,20 +473,6 @@ function Map:draw_for(char)
   map(mx, my, mx * 8, my * 8, 10, 10)
 end
 
-function generate_map()
-  for x=0, map_w - 1 do
-    for y=0, map_h - 1 do
-      if x < 4 or y < 4 or x >= map_w - 4 or y >= map_h - 4 then
-        mset(x, y, map_tiles.impasse)
-      else
-        mset(x, y, map_tiles.plain)
-      end
-    end
-  end
-
-  add(nodes, Node("ore", 512, 248))
-end
-
 -- game state
 
 world = Map()
@@ -507,7 +493,17 @@ tools = {
 gold = 0
 frame = 0
 
-generate_map()
+for x=0, map_w - 1 do
+  for y=0, map_h - 1 do
+    -- only adjust tiles that aren't marked as impassable by the map editor
+    local tile = mget(x, y)
+    if not fget(tile, impassable_flag) then
+      mset(x, y, map_tiles.plain)
+    end
+  end
+end
+
+add(nodes, Node("ore", 512, 248))
 
 -- game code
 
