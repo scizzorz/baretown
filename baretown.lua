@@ -151,7 +151,7 @@ function Char:init(p, x, y)
   self.tool = nil
   self.btns = {}
   self.btnstack = {}
-  music(0)
+  music(music_songs.main)
 end
 
 function Char:set_clip()
