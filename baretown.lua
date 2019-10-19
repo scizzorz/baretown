@@ -1,3 +1,4 @@
+printh("booting --------------------------------------------------------------", "log")
 colors = {
   black = 0,
   dark_blue = 1,
@@ -41,6 +42,15 @@ tool_sprites = {
   staff = 5,
   hammer = 6,
   sickle = 7,
+}
+
+spawnable_tools = {
+  "pick",
+  "axe",
+  "sword",
+  "staff",
+  "hammer",
+  "sickle",
 }
 
 music_songs = {
@@ -498,15 +508,35 @@ for x=0, map_w - 1 do
     -- only adjust tiles that aren't marked as impassable by the map editor
     local tile = mget(x, y)
     if not fget(tile, permanent_flag) then
+      -- random decoration tiles
       if rnd(32) < 1 then
         local decor = flr(rnd(#decor_tiles)) + 1
         mset(x, y, decor_tiles[decor])
+
+      -- random node spawns
       elseif rnd(32) < 1 then
         local node = Node("ore", x * 8, y * 8)
         add(nodes, node)
-      elseif rnd(64) < 1 then
-        local tool = Tool("pick", x * 8, y * 8)
+
+      -- random tooll spawn
+      elseif rnd(2048) < 1 then
+
+        -- choose a random power level
+        local level = 0
+        if rnd(64) < 1 then
+          level = 2
+        elseif rnd(32) < 1 then
+          level = 1
+        end
+
+        -- choose a random tool
+        local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
+        local tool = Tool(name, x * 8, y * 8, level)
+        printh("Spawning a "..name, "log")
+
         add(tools, tool)
+
+      -- plain
       else
         mset(x, y, map_tiles.plain)
       end
@@ -516,7 +546,6 @@ end
 
 
 add(tools, Bucket(center_x, center_y))
-add(tools, Tool("pick", center_x, center_y - 16))
 
 add(chars, Char(0, center_x - 8, center_y - 8))
 add(chars, Char(1, center_x + 8, center_y - 8))
