@@ -231,14 +231,14 @@ function Tool:drop(owner)
 end
 
 chars = {
-  Char(0, 256 - 8, 256 - 8),
-  Char(1, 256 + 8, 256 - 8),
-  Char(2, 256 - 8, 256 + 8),
-  Char(3, 256 + 8, 256 + 8),
+  Char(0, 512 - 8, 256 - 8),
+  Char(1, 512 + 8, 256 - 8),
+  Char(2, 512 - 8, 256 + 8),
+  Char(3, 512 + 8, 256 + 8),
 }
 
 tools = {
-  Tool("bucket", 256, 256),
+  Tool("bucket", 512, 256),
 }
 
 split_sep_color = colors.dark_blue
