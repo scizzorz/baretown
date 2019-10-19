@@ -66,12 +66,16 @@ function char:init(p, x, y)
   self.scrx = (p % 2) * 64
   self.x = x
   self.y = y
+  self.face_left = false
+  self.spr = 10
+  self.color = char_colors[self.p + 1]
   self.speed = 0.5
+  self.tool = nil
 end
 
 function char:set_clip()
   clip(self.scrx, self.scry, self.scrx + 64, self.scry + 64)
-  camera(self.x - self.scrx, self.y - self.scry)
+  camera(self.x - self.scrx - 32, self.y - self.scry - 32)
 end
 
 function char:reset_clip()
@@ -84,11 +88,13 @@ function char:draw_map()
   local my = flr(self.y / 8 - 4) -1
   local ox = self.x % 8
   local oy = self.y % 8
-  map(mx, my, self.x - 8 - ox, self.y - 8 - oy, 10, 10)
+  map(mx, my, self.x - 40 - ox, self.y - 40 - oy, 10, 10)
 end
 
 function char:draw_char()
-  spr(self.p + 1, self.x + 28, self.y + 28)
+  pal(8, self.color)
+  spr(self.spr, self.x, self.y, 1, 1, self.face_left)
+  pal()
 end
 
 function char:update()
