@@ -145,15 +145,7 @@ function Char:reset_clip()
   camera()
 end
 
-function Char:draw_map()
-  local mx = flr(self.x / 8 - 4) - 1
-  local my = flr(self.y / 8 - 4) - 1
-  local ox = self.x % 8
-  local oy = self.y % 8
-  map(mx, my, self.x - 40 - ox, self.y - 40 - oy, 10, 10)
-end
-
-function Char:draw_char()
+function Char:draw()
   -- draw sprite, remapping the red color to this player's color
   pal(colors.red, self.color)
   spr(self.spr, self.x, self.y, 1, 1, self.face_left)
@@ -389,8 +381,22 @@ function Bucket:set_palette()
   end
 end
 
+-- map
+
+Map = Object:extend()
+
+function Map:draw_for(char)
+  local mx = flr(char.x / 8 - 4) - 1
+  local my = flr(char.y / 8 - 4) - 1
+  local ox = char.x % 8
+  local oy = char.y % 8
+  map(mx, my, char.x - 40 - ox, char.y - 40 - oy, 10, 10)
+end
+
 
 -- game state
+
+world = Map()
 
 chars = {
   Char(0, center_x - 8, center_y - 8),
@@ -424,9 +430,9 @@ function _draw()
   for _, cam in pairs(chars) do
     cam:set_clip()
 
-    cam:draw_map()
+    world:draw_for(cam)
     for i, char in pairs(chars) do
-      char:draw_char()
+      char:draw()
     end
     for i, tool in pairs(tools) do
       tool:draw()
