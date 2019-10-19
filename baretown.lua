@@ -166,17 +166,19 @@ function check_collision(x, y)
 end
 
 function Char:move(dx, dy)
-  self.face_left = (dx < 0)
-
-  -- adjust for diagonal movement
-  local adj = 1
-  if dx ~= 0 and dy ~= 0 then
-    adj = 0.7
+  -- update our facing if this movement had any x component
+  if dx ~= 0 then
+    self.face_left = (dx < 0)
   end
 
+  -- diagonal movement isn't allowed because it was choppy.
+  -- with the button stack method prevents it.
+  -- if it somehow *does* make it this far, the player should
+  -- be rewarded with the 41% movespeed bonus.
+
   -- move!
-  self.x += dx * self.speed * adj
-  self.y += dy * self.speed * adj
+  self.x += dx * self.speed
+  self.y += dy * self.speed
 
   -- check collision
   local collision_tl = check_collision(self.x, self.y)
