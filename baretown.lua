@@ -766,6 +766,8 @@ for x=0, map_w - 1 do
       -- random tooll spawn
       elseif rnd(2048) < 1 then
 
+        mset(x, y, map_tiles.plain)
+
         -- choose a random power level
         local level = 0
         if rnd(64) < 1 then
