@@ -733,15 +733,19 @@ function _draw()
   end
 
   -- draw split screen separators
-  line(0, 63, 128, 63, split_sep_color)
-  line(0, 64, 128, 64, split_sep_color)
-  line(63, 0, 63, 128, split_sep_color)
-  line(64, 0, 64, 128, split_sep_color)
-  spr(ui_corner_sprite, 56, 56)
-  spr(ui_corner_sprite, 56, 64, 1, 1, false, true)
-  spr(ui_corner_sprite, 64, 56, 1, 1, true)
-  spr(ui_corner_sprite, 64, 64, 1, 1, true, true)
+  rect(0, 0, 63, 63, split_sep_color)
+  rect(64, 0, 127, 63, split_sep_color)
+  rect(0, 64, 63, 127, split_sep_color)
+  rect(64, 64, 127, 127, split_sep_color)
 
-  color(colors.orange)
-  print(""..gold, 62, 61)
+  for i, me in pairs(chars) do
+    for j, you in pairs(chars) do
+      if i ~= j then
+        local angle = atan2(you.x - me.x, you.y - me.y)
+        local offx = min(max(cos(angle) * 50, -32), 31)
+        local offy = min(max(sin(angle) * 50, -32), 31)
+        pset(me.scrx + 32 + offx, me.scry + 32 + offy, char_colors[j])
+      end
+    end
+  end
 end
