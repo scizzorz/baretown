@@ -61,6 +61,8 @@ sfx_list = {
   pick_up = 63,
   drop = 62,
   ore_smack = 61,
+  honey_smack = 61,
+  tree_smack = 61,
 }
 
 sfx_channels = {
@@ -81,6 +83,14 @@ decor_tiles = {
 
 node_sprites = {
   ore = 74,
+  honey = 75,
+  tree = 91,
+}
+
+spawnable_nodes = {
+  "ore",
+  "honey",
+  "tree",
 }
 
 split_sep_color = colors.dark_blue
@@ -338,7 +348,7 @@ function Char:update()
     if self.tool ~= nil then
       for i, node in pairs(nodes) do
         if disto(self, node) < collect_dist then
-          sfx(sfx_list.ore_smack, sfx_channels.tool)
+          sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
           gold += node:hit(1)
 
           if node:is_dead() then
@@ -510,7 +520,8 @@ for x=0, map_w - 1 do
 
       -- random node spawns
       elseif rnd(32) < 1 then
-        local node = Node("ore", x * 8, y * 8)
+        local name = spawnable_nodes[flr(rnd(#spawnable_nodes)) + 1]
+        local node = Node(name, x * 8, y * 8)
         add(nodes, node)
 
       -- random tooll spawn
