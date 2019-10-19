@@ -183,7 +183,6 @@ function Char:init(p, x, y)
   self.face_left = false
   self.spr = 10
   self.color = char_colors[self.p + 1]
-  self.speed = 0.5
   self.tool = nil
   self.btns = {}
   self.btnstack = {}
@@ -231,8 +230,10 @@ function Char:move(dx, dy)
   -- be rewarded with the 41% movespeed bonus.
 
   -- move!
-  self.x += dx * self.speed
-  self.y += dy * self.speed
+  if (frame % 2) == 0 then
+    self.x += dx
+    self.y += dy
+  end
 
   -- check collision
   local collision_tl = check_collision(self.x, self.y)
@@ -637,7 +638,7 @@ function _init()
 end
 
 function _update60()
-  frame += 0
+  frame += 1
 
   for i, char in pairs(chars) do
     char:update()
