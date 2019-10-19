@@ -630,8 +630,15 @@ add(tools, Bucket(center_x, center_y))
 
 for x=0, 1 do
   for y=0, 1 do
+    local level = 0
+    if rnd(128) < 1 then
+      level = 2
+    elseif rnd(64) < 1 then
+      level = 1
+    end
+
     local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
-    local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32)
+    local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
     add(tools, tool)
   end
 end
