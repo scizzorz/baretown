@@ -311,7 +311,7 @@ function Tool:init(name, x, y, level)
   self.level = level or 0
 end
 
-function Tool:draw()
+function Tool:set_palette()
   if self.level == 1 then
     pal(colors.light_grey, colors.orange)
     pal(colors.white, colors.yellow)
@@ -325,10 +325,19 @@ function Tool:draw()
     pal(colors.brown, colors.white)
     pal(colors.dark_grey, colors.indigo)
   end
+end
+
+function Tool:reset_palette()
+  palt()
+  pal()
+end
+
+function Tool:draw()
+  self:set_palette()
 
   spr(tool_sprites[self.name], self.x, self.y)
 
-  pal()
+  self:reset_palette()
 end
 
 function Tool:draw_held(x, y, face_left)
@@ -336,13 +345,43 @@ function Tool:draw_held(x, y, face_left)
   if face_left then
     offset = -offset
   end
+
+  self:set_palette()
+
   spr(tool_sprites[self.name], x + offset, y - 4, 1, 1, face_left)
+
+  self:reset_palette()
 end
 
 function Tool:drop(owner)
   self.x = owner.x
   self.y = owner.y
 end
+
+
+Bucket = Tool:extend()
+
+function Bucket:init(x, y, level, filled)
+  Tool.init(self, "bucket", x, y, level)
+  self.filled = filled or false
+end
+
+function Bucket:set_palette()
+  Tool.set_palette(self)
+
+  -- buckets use black as the "empty" color, so
+  -- green is set as the transparency color
+  palt(colors.black, false)
+  palt(colors.green, true)
+
+  -- then red is swapped out to our "empty" color
+  if self.filled then
+    pal(colors.red, colors.blue)
+  else
+    pal(colors.red, colors.black)
+  end
+end
+
 
 -- game state
 
@@ -354,7 +393,7 @@ chars = {
 }
 
 tools = {
-  Tool("bucket", 512, 256),
+  Bucket(512, 256),
 }
 
 gold = 0
