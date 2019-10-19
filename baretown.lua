@@ -61,6 +61,13 @@ ui_corner_sprite = 110
 ui_middle_sprite = 111
 impassable_flag = 0
 
+max_x = 1024
+max_y = 512
+
+center_x = max_x / 2
+center_y = max_y / 2
+
+
 -- utilities
 
 function dist(x1, y1, x2, y2)
@@ -222,8 +229,8 @@ function Char:move(dx, dy)
   -- in theory, the map should have a 4-block impassable border... but... whatever.
   if self.x < 0 then self.x = 0 end
   if self.y < 0 then self.y = 0 end
-  if self.x > 1016 then self.x = 1016 end
-  if self.y > 504 then self.y = 504 end
+  if self.x > max_x - 8 then self.x = max_x - 8 end
+  if self.y > max_y - 8 then self.y = max_y - 8 end
 end
 
 function Char:check_buttons()
@@ -386,14 +393,14 @@ end
 -- game state
 
 chars = {
-  Char(0, 512 - 8, 256 - 8),
-  Char(1, 512 + 8, 256 - 8),
-  Char(2, 512 - 8, 256 + 8),
-  Char(3, 512 + 8, 256 + 8),
+  Char(0, center_x - 8, center_y - 8),
+  Char(1, center_x + 8, center_y - 8),
+  Char(2, center_x - 8, center_y + 8),
+  Char(3, center_x + 8, center_y + 8),
 }
 
 tools = {
-  Bucket(512, 256),
+  Bucket(center_x, center_y),
 }
 
 gold = 0
