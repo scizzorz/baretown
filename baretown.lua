@@ -448,12 +448,7 @@ function Node:init(name, x, y, hp, value)
 end
 
 function Node:draw()
-  palt(colors.black, false)
-  palt(colors.brown, true)
-
   spr(node_sprites[self.name], self.x, self.y)
-
-  palt()
 end
 
 function Node:hit(amt)
