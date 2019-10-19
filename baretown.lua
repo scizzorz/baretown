@@ -22,25 +22,34 @@ b_down = 3
 b_o = 4
 b_x = 5
 
-_object = {}
-_object.__index = _object
+function dist(x1, y1, x2, y2)
+  local dx = x1 - x2
+  local dy = y1 - y2
+  return sqrt(dx * dx + dy * dy)
+end
 
+function disto(o1, o2)
+  return dist(o1.x, o1.y, o2.x, o2.y)
+end
+
+Object = {}
+Object.__index = Object
 
 -- constructor
-function _object:__call(...)
+function Object:__call(...)
   local this = setmetatable({}, self)
   return this, this:init(...)
 end
 
 
 -- methods
-function _object:init() end
-function _object:update() end
-function _object:draw() end
+function Object:init() end
+function Object:update() end
+function Object:draw() end
 
 
 -- subclassing
-function _object:extend()
+function Object:extend()
   proto = {}
 
   -- copy meta values, since lua
@@ -58,9 +67,26 @@ function _object:extend()
   return setmetatable(proto, self)
 end
 
-char = _object:extend()
+char_colors = {
+  c_red,
+  c_blue,
+  c_green,
+  c_yellow,
+}
 
-function char:init(p, x, y)
+tool_sprites = {
+  pick = 1,
+  axe = 2,
+  sword = 3,
+  bucket = 4,
+  staff = 5,
+  hammer = 6,
+  sickle = 7,
+}
+
+Char = Object:extend()
+
+function Char:init(p, x, y)
   self.p = p
   self.scry = flr(p / 2) * 64
   self.scrx = (p % 2) * 64
@@ -73,17 +99,17 @@ function char:init(p, x, y)
   self.tool = nil
 end
 
-function char:set_clip()
+function Char:set_clip()
   clip(self.scrx, self.scry, self.scrx + 64, self.scry + 64)
   camera(self.x - self.scrx - 32, self.y - self.scry - 32)
 end
 
-function char:reset_clip()
+function Char:reset_clip()
   clip()
   camera()
 end
 
-function char:draw_map()
+function Char:draw_map()
   local mx = flr(self.x / 8 - 4) - 1
   local my = flr(self.y / 8 - 4) -1
   local ox = self.x % 8
@@ -91,24 +117,90 @@ function char:draw_map()
   map(mx, my, self.x - 40 - ox, self.y - 40 - oy, 10, 10)
 end
 
-function char:draw_char()
+function Char:draw_char()
   pal(8, self.color)
   spr(self.spr, self.x, self.y, 1, 1, self.face_left)
   pal()
+
+  -- draw our tool if it exists
+  if self.tool ~= nil then
+    self.tool:draw_held(self.x, self.y, self.face_left)
+  end
 end
 
-function char:update()
+function Char:update()
+  -- move up/down
   if btn(b_up, self.p) then self.y -= self.speed end
   if btn(b_down, self.p) then self.y += self.speed end
-  if btn(b_left, self.p) then self.x -= self.speed end
-  if btn(b_right, self.p) then self.x += self.speed end
+
+  -- move left/right, adjusting face_left as necessary
+  if btn(b_left, self.p) then
+    self.x -= self.speed
+    self.face_left = true
+  end
+
+  if btn(b_right, self.p) then
+    self.x += self.speed
+    self.face_left = false
+  end
+
+  -- pick up or drop tools
+  if btnp(b_o, self.p) then
+    -- drop held tool
+    if self.tool ~= nil then
+      add(tools, self.tool)
+      self.tool:drop(self)
+      self.tool = nil
+
+    -- pick up a new tool
+    else
+      for i, tool in pairs(tools) do
+        -- pick up tools if distance < 8 pixels
+        if disto(self, tool) < 8 then
+          self.tool = tool
+          del(tools, tool)
+          break
+        end
+      end
+    end
+  end
+end
+
+Tool = Object:extend()
+
+function Tool:init(name, x, y, power)
+  self.name = name
+  self.x = x
+  self.y = y
+  self.power = power or 0
+end
+
+function Tool:draw()
+  spr(tool_sprites[self.name], self.x, self.y)
+end
+
+function Tool:draw_held(x, y, face_left)
+  local offset = 4
+  if face_left then
+    offset = -offset
+  end
+  spr(tool_sprites[self.name], x + offset, y - 4, 1, 1, face_left)
+end
+
+function Tool:drop(owner)
+  self.x = owner.x
+  self.y = owner.y
 end
 
 chars = {
-  char(0, 256 - 8, 256 - 8),
-  char(1, 256 + 8, 256 - 8),
-  char(2, 256 - 8, 256 + 8),
-  char(3, 256 + 8, 256 + 8),
+  Char(0, 256 - 8, 256 - 8),
+  Char(1, 256 + 8, 256 - 8),
+  Char(2, 256 - 8, 256 + 8),
+  Char(3, 256 + 8, 256 + 8),
+}
+
+tools = {
+  Tool("pick", 256, 256),
 }
 
 split_sep_color = c_dark_blue
@@ -120,10 +212,15 @@ end
 function _draw()
   for _, cam in pairs(chars) do
     cam:set_clip()
+
     cam:draw_map()
-    for i, c in pairs(chars) do
-      c:draw_char()
+    for i, char in pairs(chars) do
+      char:draw_char()
     end
+    for i, tool in pairs(tools) do
+      tool:draw()
+    end
+
     cam:reset_clip()
   end
 
