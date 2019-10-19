@@ -58,11 +58,12 @@ music_songs = {
 }
 
 sfx_list = {
-  pick_up = 63,
-  drop = 62,
-  ore_smack = 61,
-  honey_smack = 61,
-  tree_smack = 61,
+  pick_up = 16,
+  drop = 17,
+  ore_smack = 18,
+  explode = 19,
+  tree_smack = 20,
+  honey_smack = 21,
 }
 
 sfx_channels = {
@@ -352,6 +353,7 @@ function Char:update()
           gold += node:hit(1)
 
           if node:is_dead() then
+            sfx(sfx_list.explode, sfx_channels.tool)
             node:explode()
             del(nodes, node)
           end
