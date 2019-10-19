@@ -56,6 +56,14 @@ sfx_channels = {
   tool = 1,
 }
 
+map_tiles = {
+  plain = 64,
+  decor_1 = 80,
+  decor_2 = 96,
+  decor_3 = 112,
+  impasse = 65,
+}
+
 split_sep_color = colors.dark_blue
 ui_corner_sprite = 110
 ui_middle_sprite = 111
@@ -384,6 +392,21 @@ end
 -- map
 
 Map = Object:extend()
+
+function Map:init(w, h)
+  self.w = w or 128
+  self.h = h or 64
+
+  for x=0, self.w - 1 do
+    for y=0, self.h - 1 do
+      if x < 4 or y < 4 or x >= self.w - 4 or y >= self.h - 4 then
+        mset(x, y, map_tiles.impasse)
+      else
+        mset(x, y, map_tiles.plain)
+      end
+    end
+  end
+end
 
 function Map:draw_for(char)
   local mx = flr(char.x / 8 - 4) - 1
