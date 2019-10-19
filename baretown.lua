@@ -90,8 +90,10 @@ center_y = max_y / 2
 -- utilities
 
 function dist(x1, y1, x2, y2)
-  local dx = x1 - x2
-  local dy = y1 - y2
+  -- this needs to be capped because of the Pico-8's numbers capping at like 32k.
+  -- it roughly equates to having a maximum hypotenuse of 180ish
+  local dx = min(abs(x1 - x2), 127)
+  local dy = min(abs(y1 - y2), 127)
   return sqrt(dx * dx + dy * dy)
 end
 
