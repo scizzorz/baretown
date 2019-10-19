@@ -1,26 +1,61 @@
-c_black = 0
-c_dark_blue = 1
-c_dark_purple = 2
-c_dark_green = 3
-c_brown = 4
-c_dark_grey = 5
-c_light_grey = 6
-c_white = 7
-c_red = 8
-c_orange = 9
-c_yellow = 10
-c_green = 11
-c_blue = 12
-c_indigo = 13
-c_pink = 14
-c_peach = 15
+colors = {
+  black = 0,
+  dark_blue = 1,
+  dark_purple = 2,
+  dark_green = 3,
+  brown = 4,
+  dark_grey = 5,
+  light_grey = 6,
+  white = 7,
+  red = 8,
+  orange = 9,
+  yellow = 10,
+  green = 11,
+  blue = 12,
+  indigo = 13,
+  pink = 14,
+  peach = 15,
+}
 
-b_left = 0
-b_right = 1
-b_up = 2
-b_down = 3
-b_o = 4
-b_x = 5
+btns = {
+  left = 0,
+  right = 1,
+  up = 2,
+  down = 3,
+  o = 4,
+  x = 5,
+}
+
+char_colors = {
+  colors.red,
+  colors.blue,
+  colors.green,
+  colors.yellow,
+}
+
+tool_sprites = {
+  pick = 1,
+  axe = 2,
+  sword = 3,
+  bucket = 4,
+  staff = 5,
+  hammer = 6,
+  sickle = 7,
+}
+
+music_songs = {
+  main = 0,
+}
+
+sfx_list = {
+  pick_up = 63,
+  drop = 62,
+}
+
+sfx_channels = {
+  tool = 1,
+}
+
 
 function dist(x1, y1, x2, y2)
   local dx = x1 - x2
@@ -67,23 +102,6 @@ function Object:extend()
   return setmetatable(proto, self)
 end
 
-char_colors = {
-  c_red,
-  c_blue,
-  c_green,
-  c_yellow,
-}
-
-tool_sprites = {
-  pick = 1,
-  axe = 2,
-  sword = 3,
-  bucket = 4,
-  staff = 5,
-  hammer = 6,
-  sickle = 7,
-}
-
 Char = Object:extend()
 
 function Char:init(p, x, y)
@@ -120,7 +138,7 @@ end
 
 function Char:draw_char()
   -- draw sprite, remapping the red color to this player's color
-  pal(c_red, self.color)
+  pal(colors.red, self.color)
   spr(self.spr, self.x, self.y, 1, 1, self.face_left)
   pal()
 
@@ -132,37 +150,37 @@ end
 
 function Char:update()
   -- move up/down
-  if btn(b_up, self.p) then self.y -= self.speed end
-  if btn(b_down, self.p) then self.y += self.speed end
+  if btn(btns.up, self.p) then self.y -= self.speed end
+  if btn(btns.down, self.p) then self.y += self.speed end
 
   -- move left/right, adjusting face_left as necessary
-  if btn(b_left, self.p) then
+  if btn(btns.left, self.p) then
     self.x -= self.speed
     self.face_left = true
   end
 
-  if btn(b_right, self.p) then
+  if btn(btns.right, self.p) then
     self.x += self.speed
     self.face_left = false
   end
 
   -- pick up or drop tools
-  if btnp(b_o, self.p) then
+  if btnp(btns.o, self.p) then
     -- drop held tool
     if self.tool ~= nil then
       add(tools, self.tool)
       self.tool:drop(self)
       self.tool = nil
-      sfx(62, 1)
+      sfx(sfx_list.drop, sfx_channels.tool)
 
     -- pick up a new tool
     else
       for i, tool in pairs(tools) do
-        -- pick up tools if distance < 8 pixels
+        -- pick up if distance < 8 pixels
         if disto(self, tool) < 8 then
           self.tool = tool
           del(tools, tool)
-          sfx(63, 1)
+          sfx(sfx_list.pick_up, sfx_channels.tool)
           break
         end
       end
@@ -181,17 +199,17 @@ end
 
 function Tool:draw()
   if self.level == 1 then
-    pal(c_light_grey, c_orange)
-    pal(c_white, c_yellow)
-    pal(c_brown, c_dark_grey)
-    pal(c_dark_grey, c_brown)
+    pal(colors.light_grey, colors.orange)
+    pal(colors.white, colors.yellow)
+    pal(colors.brown, colors.dark_grey)
+    pal(colors.dark_grey, colors.brown)
   end
 
   if self.level == 2 then
-    pal(c_light_grey, c_dark_blue)
-    pal(c_white, c_blue)
-    pal(c_brown, c_white)
-    pal(c_dark_grey, c_indigo)
+    pal(colors.light_grey, colors.dark_blue)
+    pal(colors.white, colors.blue)
+    pal(colors.brown, colors.white)
+    pal(colors.dark_grey, colors.indigo)
   end
 
   spr(tool_sprites[self.name], self.x, self.y)
@@ -223,7 +241,7 @@ tools = {
   Tool("bucket", 256, 256),
 }
 
-split_sep_color = c_dark_blue
+split_sep_color = colors.dark_blue
 
 function _init()
   cls()
