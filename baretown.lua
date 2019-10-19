@@ -44,10 +44,6 @@ tool_sprites = {
   sickle = 7,
 }
 
-loot_sprites = {
-  gold = 90,
-}
-
 spawnable_tools = {
   "pick",
   "axe",
@@ -87,9 +83,15 @@ decor_tiles = {
 }
 
 node_sprites = {
-  ore = 74,
-  honey = 75,
-  tree = 91,
+  ore = 16,
+  tree = 17,
+  honey = 18,
+}
+
+loot_sprites = {
+  ore = 32,
+  tree = 33,
+  honey = 34,
 }
 
 spawnable_nodes = {
@@ -504,7 +506,7 @@ function Node:explode()
   end
 
   for n=0, self.value + rnd(4) do
-    local lt = Loot("gold", self.x + 4, self.y + 4)
+    local lt = Loot(self.name, self.x + 4, self.y + 4)
     add(loots, lt)
   end
 end
