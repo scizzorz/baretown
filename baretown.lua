@@ -492,7 +492,7 @@ function Node:spew_particle(amt)
   end
 end
 
-function Node:spew_loot(amt)
+function Node:spew_loot()
   local lt = Loot(self.name, self.x + 4, self.y + 4)
   add(loots, lt)
 end
@@ -506,11 +506,11 @@ function Node:hit(amt)
     self.hp -= 1
 
     if self.hp % 2 == 0 then
-      self:spew_loot(1)
+      self:spew_loot()
     end
 
     if self.hp == 0 then
-      self:spew_loot(3)
+      self:spew_loot()
     end
   end
 end
