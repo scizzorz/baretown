@@ -155,21 +155,31 @@ function Char:draw_char()
   end
 end
 
+function Char:move(dx, dy)
+  self.face_left = (dx < 0)
+
+  -- adjust for diagonal movement
+  local adj = 1
+  if dx ~= 0 and dy ~= 0 then
+    adj = 0.7
+  end
+
+  -- move!
+  self.x += dx * self.speed * adj
+  self.y += dy * self.speed * adj
+end
+
 function Char:update()
-  -- move up/down
-  if btn(btns.up, self.p) then self.y -= self.speed end
-  if btn(btns.down, self.p) then self.y += self.speed end
+  -- movement
+  local dx = 0
+  local dy = 0
 
-  -- move left/right, adjusting face_left as necessary
-  if btn(btns.left, self.p) then
-    self.x -= self.speed
-    self.face_left = true
-  end
+  if btn(btns.up, self.p) then dy -= 1 end
+  if btn(btns.down, self.p) then dy += 1  end
+  if btn(btns.left, self.p) then dx -= 1 end
+  if btn(btns.right, self.p) then dx += 1 end
 
-  if btn(btns.right, self.p) then
-    self.x += self.speed
-    self.face_left = false
-  end
+  self:move(dx, dy)
 
   -- pick up or drop tools
   if btnp(btns.o, self.p) then
