@@ -59,11 +59,14 @@ sfx_channels = {
 
 map_tiles = {
   plain = 64,
-  decor_1 = 80,
-  decor_2 = 96,
-  decor_3 = 112,
   impasse = 65,
   node = 66,
+}
+
+decor_tiles = {
+  80,
+  96,
+  112,
 }
 
 node_sprites = {
@@ -482,15 +485,9 @@ world = Map()
 nodes = {}
 
 chars = {
-  Char(0, center_x - 8, center_y - 8),
-  Char(1, center_x + 8, center_y - 8),
-  Char(2, center_x - 8, center_y + 8),
-  Char(3, center_x + 8, center_y + 8),
 }
 
-tools = {
-  Bucket(center_x, center_y),
-}
+tools = {}
 
 gold = 0
 frame = 0
@@ -500,12 +497,30 @@ for x=0, map_w - 1 do
     -- only adjust tiles that aren't marked as impassable by the map editor
     local tile = mget(x, y)
     if not fget(tile, impassable_flag) then
-      mset(x, y, map_tiles.plain)
+      if rnd(32) < 1 then
+        local decor = flr(rnd(#decor_tiles)) + 1
+        mset(x, y, decor_tiles[decor])
+      elseif rnd(32) < 1 then
+        local node = Node("ore", x * 8, y * 8)
+        add(nodes, node)
+      elseif rnd(64) < 1 then
+        local tool = Tool("pick", x * 8, y * 8)
+        add(tools, tool)
+      else
+        mset(x, y, map_tiles.plain)
+      end
     end
   end
 end
 
-add(nodes, Node("ore", 512, 248))
+
+add(tools, Bucket(center_x, center_y))
+add(tools, Tool("pick", center_x, center_y - 16))
+
+add(chars, Char(0, center_x - 8, center_y - 8))
+add(chars, Char(1, center_x + 8, center_y - 8))
+add(chars, Char(2, center_x - 8, center_y + 8))
+add(chars, Char(3, center_x + 8, center_y + 8))
 
 -- game code
 
