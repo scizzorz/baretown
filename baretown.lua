@@ -126,6 +126,10 @@ function disto(o1, o2)
   return dist(o1.x, o1.y, o2.x, o2.y)
 end
 
+function flr8(x)
+  return flr(x / 8)
+end
+
 -- base class
 
 Object = {}
@@ -480,6 +484,18 @@ end
 
 function Node:explode()
   mset(self.x / 8, self.y / 8, map_tiles.plain)
+
+  local sx = (node_sprites[self.name] % 16) * 8
+  local sy = flr(node_sprites[self.name] / 16) * 8
+
+  for n=0, 7 + rnd(4) do
+    local c = colors.black
+    while c == colors.black do
+      c = sget(sx + rnd(8), sy + rnd(8))
+    end
+    local pt = Particle(c, self.x + 4, self.y + 4)
+    add(particles, pt)
+  end
 end
 
 -- map
@@ -496,17 +512,40 @@ function Map:draw_for(char)
   map(mx, my, mx * 8, my * 8, 11, 11)
 end
 
+-- particle effects
+
+Particle = Object:extend()
+
+function Particle:init(c, x, y, dx, dy)
+  self.c = c
+  self.x = x
+  self.y = y
+  self.dx = dx or (rnd(2) - 1)
+  self.dy = dy or (rnd(2) - 1)
+end
+
+function Particle:update()
+  self.x += self.dx
+  self.y += self.dy
+  self.dx *= 0.9
+  self.dy *= 0.9
+end
+
+function Particle:is_dead()
+  return abs(self.dx) < 0.1 or abs(self.dy) < 0.1
+end
+
+function Particle:draw()
+  pset(self.x, self.y, self.c)
+end
+
 -- game state
 
 world = Map()
-
 nodes = {}
-
-chars = {
-}
-
+chars = {}
 tools = {}
-
+particles = {}
 gold = 0
 frame = 0
 
@@ -572,6 +611,13 @@ function _update60()
   for i, char in pairs(chars) do
     char:update()
   end
+
+  for i, pt in pairs(particles) do
+    pt:update()
+    if pt:is_dead() then
+      del(particles, pt)
+    end
+  end
 end
 
 function _draw()
@@ -579,9 +625,6 @@ function _draw()
     cam:set_clip()
 
     world:draw_for(cam)
-    for i, char in pairs(chars) do
-      char:draw()
-    end
 
     for i, tool in pairs(tools) do
       tool:draw()
@@ -589,6 +632,14 @@ function _draw()
 
     for i, node in pairs(nodes) do
       node:draw()
+    end
+
+    for i, char in pairs(chars) do
+      char:draw()
+    end
+
+    for i, pt in pairs(particles) do
+      pt:draw()
     end
 
     cam:reset_clip()
