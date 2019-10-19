@@ -363,7 +363,7 @@ function Char:update()
       for i, node in pairs(nodes) do
         if disto(self, node) < smack_dist then
           sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
-          node:hit(1 + self.tool.level)
+          node:hit(shl(1, self.tool.level)) -- 2^level
 
           if node:is_dead() then
             sfx(sfx_list.explode, sfx_channels.tool)
