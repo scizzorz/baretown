@@ -419,18 +419,7 @@ function Char:update_world()
   -- use our tool
   if btnp(btns.x, self.p) then
     if self.tool ~= nil then
-      for i, node in pairs(nodes) do
-        if disto(self, node) < smack_dist then
-          sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
-          node:hit(shl(1, self.tool.level)) -- 2^level
-
-          if node:is_dead() then
-            sfx(sfx_list.explode, sfx_channels.tool)
-            node:explode()
-            del(nodes, node)
-          end
-        end
-      end
+      self.tool:use(self)
     else
       sfx(sfx_list.err, sfx_channels.tool)
     end
@@ -495,6 +484,36 @@ function Tool:drop(owner)
   self.x = owner.x
   self.y = owner.y
 end
+
+function Tool:use(char)
+  if tool_actions[self.name] ~= nil then
+    printh("using tool "..self.name, "log")
+    tool_actions[self.name](self, char)
+  end
+end
+
+function Smacker(node_name)
+  return function(tool, char)
+    for i, node in pairs(nodes) do
+      if node.name == node_name and disto(char, node) < smack_dist then
+        sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
+        node:hit(shl(1, tool.level)) -- 2^level
+
+        if node:is_dead() then
+          sfx(sfx_list.explode, sfx_channels.tool)
+          node:explode()
+          del(nodes, node)
+        end
+      end
+    end
+  end
+end
+
+tool_actions = {}
+tool_actions.pick = Smacker("ore")
+tool_actions.sickle = Smacker("honey")
+tool_actions.axe = Smacker("tree")
+tool_actions.hammer = Smacker("ore")
 
 
 Bucket = Tool:extend()
