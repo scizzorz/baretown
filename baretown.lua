@@ -409,11 +409,13 @@ function Map:init(w, h)
 end
 
 function Map:draw_for(char)
+  -- draw the map from a character's perspective.
+  -- this is done to save on render time - no need to draw the full 128x64 map
+  -- for each character's frame when we can just draw a single 10x10 and cover
+  -- their entire screen
   local mx = flr(char.x / 8 - 4) - 1
   local my = flr(char.y / 8 - 4) - 1
-  local ox = char.x % 8
-  local oy = char.y % 8
-  map(mx, my, char.x - 40 - ox, char.y - 40 - oy, 10, 10)
+  map(mx, my, mx * 8, my * 8, 10, 10)
 end
 
 
