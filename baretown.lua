@@ -64,6 +64,7 @@ sfx_list = {
   explode = 19,
   tree_smack = 20,
   honey_smack = 21,
+  err = 22,
 }
 
 sfx_channels = {
@@ -188,7 +189,6 @@ function Char:init(p, x, y)
   self.tool = nil
   self.btns = {}
   self.btnstack = {}
-  music(music_songs.main)
 end
 
 function Char:set_clip()
@@ -371,6 +371,8 @@ function Char:update()
           end
         end
       end
+    else
+      sfx(sfx_list.err, sfx_channels.tool)
     end
   end
 end
@@ -582,6 +584,7 @@ particles = {}
 loots = {}
 gold = 0
 frame = 0
+aframe = 0
 
 for x=0, map_w - 1 do
   for y=0, map_h - 1 do
@@ -652,10 +655,16 @@ add(chars, Char(3, center_x + 8, center_y + 8))
 
 function _init()
   cls()
+
+  music(music_songs.main)
 end
 
 function _update60()
   frame += 1
+
+  if (frame % 6) == 0 then
+    aframe += 1
+  end
 
   for i, char in pairs(chars) do
     char:update()
