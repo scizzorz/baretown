@@ -339,56 +339,33 @@ function Char:move(dx, dy)
   end
 
   -- diagonal movement isn't allowed because it was choppy.
-  -- with the button stack method prevents it.
+  -- the button stack method prevents it.
   -- if it somehow *does* make it this far, the player should
   -- be rewarded with the 41% movespeed bonus.
 
-  -- move!
-  if (frame % 2) == 0 then
-    self.x += dx
-    self.y += dy
+  -- only move every other frame to keep speeds in check
+  if (frame % 2) == 1 then
+    return
   end
+
+  -- move!
+  self.x += dx
+  self.y += dy
 
   -- check collision
   local collision_tl = check_collision(self.x, self.y)
-  local collision_tr = check_collision(self.x + 8, self.y)
-  local collision_bl = check_collision(self.x, self.y + 8)
-  local collision_br = check_collision(self.x + 8, self.y + 8)
+  local collision_tr = check_collision(self.x + 7, self.y)
+  local collision_bl = check_collision(self.x, self.y + 7)
+  local collision_br = check_collision(self.x + 7, self.y + 7)
 
-  -- only fix collision in a direction we're moving
-  -- FIXME some weird collision failure when moving right or down inline with
-  -- an impassable block... probably because of the weird nested collision
-  -- rules I had to add... fuc
-  if dy < 0 and (collision_tl or collision_tr) then
-    -- don't adjust Y position if *both* corners are blocked!
-    if not (collision_tl and collision_bl) and not (collision_tr and collision_br) then
-      self.y = flr(self.y / 8) * 8 + 8
-    end
+  -- if we are now colliding with something, undo the movement
+  if collision_tl or collision_tr or collision_bl or collision_br then
+    self.x -= dx
+    self.y -= dy
   end
 
-  if dy > 0 and (collision_bl or collision_br) then
-    -- see above
-    if not (collision_tl and collision_bl) and not (collision_tr and collision_br) then
-      self.y = flr(self.y / 8) * 8
-    end
-  end
-
-  if dx < 0 and (collision_tl or collision_bl) then
-    -- see above
-    if not (collision_tl and collision_tr) and not (collision_bl and collision_br) then
-      self.x = flr(self.x / 8) * 8 + 8
-    end
-  end
-
-  if dx > 0 and (collision_tr or collision_br) then
-    -- see above
-    if not (collision_tl and collision_tr) and not (collision_bl and collision_br) then
-      self.x = flr(self.x / 8) * 8
-    end
-  end
-
-  -- map bounds
-  -- in theory, the map should have a 4-block impassable border... but... whatever.
+  -- check map bounds
+  -- in theory, the map should have an impassable border... but... whatever.
   if self.x < 0 then self.x = 0 end
   if self.y < 0 then self.y = 0 end
   if self.x > max_x - 8 then self.x = max_x - 8 end
