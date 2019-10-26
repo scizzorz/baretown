@@ -164,6 +164,10 @@ function flr8(x)
   return flr(x / 8)
 end
 
+-- draw a sprite or an animation table
+-- anim: either a spritesheet ID or an array of spritesheet IDs
+--       if the latter, the animation framerate is taken from the .fps field of
+--       the table, defaulting to 10
 function draw_sprite(anim, ...)
   if type(anim) == "table" then
     local idx = flr(frame * (anim.fps or 10) / 60) % #anim + 1
@@ -172,6 +176,9 @@ function draw_sprite(anim, ...)
   spr(anim, ...)
 end
 
+-- calculate the renderable splitscreen box for a character
+-- p: 0-based player number
+-- num: the number of screens being drawn
 function screen_box(p, num)
   if num == 1 then
     return {x=0, y=0, w=128, h=128}
@@ -184,6 +191,11 @@ function screen_box(p, num)
   return {x=(p % 2) * 64, y=flr(p / 2) * 64, w=64, h=64}
 end
 
+-- draw a single pixel around a box border indicating a direction
+-- from: source object
+-- to: destination object
+-- box: screen box to draw the tracker in
+-- color: which color to draw the tracker
 function draw_tracker(from, to, box, color)
   if abs(to.x - from.x) > box.w / 2 or abs(to.y - from.y) > box.h / 2 then
     local angle = atan2(to.x - from.x, to.y - from.y)
@@ -208,7 +220,6 @@ function draw_tracker(from, to, box, color)
 end
 
 -- base class
-
 Object = {}
 Object.__index = Object
 
