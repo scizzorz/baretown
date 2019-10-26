@@ -206,6 +206,29 @@ palette = {
   },
 }
 
+-- random chance rates as 1/n values
+rng = {
+  map = {
+    decorated = 32,
+    node = {
+      spawn = 32,
+      gold = 64,
+      mythril = 128,
+    },
+    tool = {
+      spawn = 2048,
+      gold = 32,
+      mythril = 64,
+    },
+  },
+
+  -- chance for starting tools to be powerful
+  tool = {
+    mythril = 128,
+    gold = 64,
+  },
+}
+
 -- which nodes can spawn throughout the world
 spawnable_nodes = {
   "ore",
@@ -267,6 +290,16 @@ end
 
 function flr8(x)
   return flr(x / 8)
+end
+
+-- return true in 1/n cases
+function roll(n)
+  return rnd(n) < 1
+end
+
+-- choose a random element from t
+function choose(t)
+  return t[flr(rnd(#t)) + 1]
 end
 
 -- draw a sprite or an animation table
@@ -898,39 +931,38 @@ function build_map()
       local tile = mget(x, y)
       if not fget(tile, flag.permanent) then
         -- random decoration tiles
-        if rnd(32) < 1 then
-          local decor = flr(rnd(#gfx.map.decor)) + 1
-          mset(x, y, gfx.map.decor[decor])
+        if roll(rng.map.decorated) then
+          mset(x, y, choose(gfx.map.decor))
 
         -- random node spawns
-        elseif rnd(32) < 1 then
+        elseif roll(rng.map.node.spawn) then
           -- choose a random power level
           local level = 0
-          if rnd(128) < 1 then
+          if roll(rng.map.node.mythril) then
             level = 2
-          elseif rnd(64) < 1 then
+          elseif roll(rng.map.node.gold) then
             level = 1
           end
 
           -- choose a random node
-          local name = spawnable_nodes[flr(rnd(#spawnable_nodes)) + 1]
+          local name = choose(spawnable_nodes)
           local node = Node(name, x * 8, y * 8, level)
           add(nodes, node)
 
         -- random tooll spawn
-        elseif rnd(2048) < 1 then
+        elseif roll(rng.map.tool.spawn) then
           mset(x, y, gfx.map.plain)
 
           -- choose a random power level
           local level = 0
-          if rnd(64) < 1 then
+          if roll(rng.map.tool.mythril) then
             level = 2
-          elseif rnd(32) < 1 then
+          elseif roll(rng.map.tool.gold) then
             level = 1
           end
 
           -- choose a random tool
-          local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
+          local name = choose(spawnable_tools)
           local tool = Tool(name, x * 8, y * 8, level)
           printh("Spawning a "..name, "log")
 
@@ -949,13 +981,13 @@ function spawn_tools()
   for x = 0, 1 do
     for y = 0, 1 do
       local level = 0
-      if rnd(128) < 1 then
+      if roll(rng.tool.mythril) then
         level = 2
-      elseif rnd(64) < 1 then
+      elseif roll(rng.tool.gold) then
         level = 1
       end
 
-      local name = startable_tools[flr(rnd(#startable_tools)) + 1]
+      local name = choose(startable_tools)
       local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
       add(tools, tool)
     end
