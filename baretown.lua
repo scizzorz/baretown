@@ -184,6 +184,29 @@ function screen_box(p, num)
   return {x=(p % 2) * 64, y=flr(p / 2) * 64, w=64, h=64}
 end
 
+function draw_tracker(from, to, box, color)
+  if abs(to.x - from.x) > box.w / 2 or abs(to.y - from.y) > box.h / 2 then
+    local angle = atan2(to.x - from.x, to.y - from.y)
+    local dx = cos(angle)
+    local dy = sin(angle)
+    local x = box.x + box.w / 2
+    local y = box.y + box.h / 2
+
+    -- trace to the edge of the box
+    while x > box.x and x < box.x + box.w - 1 and y > box.y and y < box.y + box.h - 1 do
+      x += dx
+      y += dy
+    end
+
+    -- clamp into box
+    x = min(max(x, box.x), box.x + box.w - 1)
+    y = min(max(y, box.y), box.y + box.h - 1)
+
+    -- draw indicator
+    pset(x, y, color)
+  end
+end
+
 -- base class
 
 Object = {}
@@ -931,43 +954,21 @@ function _draw()
   end
 
   -- draw split screen separators
-  -- rect(0, 0, 63, 63, split_sep_color)
-  -- rect(64, 0, 127, 63, split_sep_color)
-  -- rect(0, 64, 63, 127, split_sep_color)
-  -- rect(64, 64, 127, 127, split_sep_color)
 
-  --[[
   -- draw friend trackers
+  local town = {x=center_x, y=center_y}
   for i, me in pairs(chars) do
     -- draw friend indicators
+    local box = screen_box(i - 1, #chars)
     for j, you in pairs(chars) do
       if i ~= j then
-        if abs(you.x - me.x) > 32 or abs(you.y - me.y) > 32 then
-          local angle = atan2(you.x - me.x, you.y - me.y)
-          local offx = min(max(cos(angle) * 45, -32), 31)
-          local offy = min(max(sin(angle) * 45, -32), 31)
-          pset(me.scrx + 32 + offx, me.scry + 32 + offy, char_colors[j])
-
-          offx = min(max(cos(angle) * 45, -31), 30)
-          offy = min(max(sin(angle) * 45, -31), 30)
-          pset(me.scrx + 32 + offx, me.scry + 32 + offy, char_colors[j])
-        end
+        draw_tracker(me, you, box, char_colors[j])
       end
     end
 
     -- draw town indicator
-    if abs(center_x - me.x) > 32 or abs(center_y - me.y) > 32 then
-      local angle = atan2(center_x - me.x, center_y - me.y)
-      local offx = min(max(cos(angle) * 45, -32), 31)
-      local offy = min(max(sin(angle) * 45, -32), 31)
-      pset(me.scrx + 32 + offx, me.scry + 32 + offy, colors.white)
-
-      offx = min(max(cos(angle) * 45, -31), 30)
-      offy = min(max(sin(angle) * 45, -31), 30)
-      pset(me.scrx + 32 + offx, me.scry + 32 + offy, colors.white)
-    end
+    draw_tracker(me, town, box, colors.white)
   end
-  ]]
 
   if false then
     local mem = flr(stat(0) * 100 / 512)
