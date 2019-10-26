@@ -172,6 +172,18 @@ function draw_sprite(anim, ...)
   spr(anim, ...)
 end
 
+function screen_box(p, num)
+  if num == 1 then
+    return {x=0, y=0, w=128, h=128}
+  elseif num == 2 or (num == 3 and p == 0) then
+    return {x=0, y=p * 64, w=128, h=64}
+  elseif num == 3 then
+    return {x=(p - 1) * 64, y=64, w=64, h=64}
+  end
+
+  return {x=(p % 2) * 64, y=flr(p / 2) * 64, w=64, h=64}
+end
+
 -- base class
 
 Object = {}
@@ -232,39 +244,14 @@ function Char:init(p, x, y)
 end
 
 function Char:set_clip(p, num)
-  if num == 1 then
-    clip()
-    camera(self.x - 60, self.y - 60)
-  elseif num == 2 or (num == 3 and p == 0) then
-    local scry = p * 64
-    clip(0, scry, 128, scry + 64)
-    camera(self.x - 60, self.y - scry - 28)
-  elseif num == 3 then
-    local scrx = (p - 1) * 64
-    clip(scrx, 64, scrx + 64, 128)
-    camera(self.x - scrx - 28, self.y - 64 - 28)
-  else
-    local scrx = (p % 2) * 64
-    local scry = flr(p / 2) * 64
-    clip(scrx, scry, scrx + 64, scry + 64)
-    camera(self.x - scrx - 28, self.y - scry - 28)
-  end
+  local box = screen_box(p, num)
+  clip(box.x, box.y, box.x + box.w, box.y + box.h)
+  camera(self.x - box.w / 2 - box.x + 4, self.y - box.h / 2 - box.y + 4)
 end
 
 function Char:draw_border(p, num)
-  if num == 1 then
-    rect(0, 0, 127, 127, split_sep_color)
-  elseif num == 2 or (num == 3 and p == 0) then
-    local scry = p * 64
-    rect(0, scry, 127, scry + 63, split_sep_color)
-  elseif num == 3 then
-    local scrx = (p - 1) * 64
-    rect(scrx, 64, scrx + 63, 127, split_sep_color)
-  else
-    local scrx = (p % 2) * 64
-    local scry = flr(p / 2) * 64
-    rect(scrx, scry, scrx + 63, scry + 63, split_sep_color)
-  end
+  local box = screen_box(p, num)
+  rect(box.x, box.y, box.x + box.w - 1, box.y + box.h - 1, split_sep_color)
 end
 
 function Char:reset_clip()
