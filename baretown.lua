@@ -962,7 +962,7 @@ function _draw()
     local box = screen_box(i - 1, #chars)
     for j, you in pairs(chars) do
       if i ~= j then
-        draw_tracker(me, you, box, char_colors[j])
+        draw_tracker(me, you, box, you.color)
       end
     end
 
