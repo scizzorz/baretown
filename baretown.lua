@@ -14,6 +14,23 @@ function play_music(n, ...)
   _music(n or -1, ...)
 end
 
+-- switch a palette
+function set_palette(swap)
+  -- if the given palette is nil, reset everything
+  if swap == nil then
+    pal()
+    palt()
+    return
+  end
+
+  -- otherwise, iterate through the table swapping from the key to the value
+  -- if a value is nil, it's set as transparent
+  for from, to in pairs(swap) do
+    palt(from, to == nil)
+    pal(from, to or 0)
+  end
+end
+
 -- color palette
 color = {
   black = 0,
@@ -134,16 +151,58 @@ sfx = {
   },
 }
 
-node_palette_swaps = {
-  {
-    ore = {[color.light_grey] = color.orange, [color.white] = color.yellow},
-    tree = {[color.green] = color.orange, [color.brown] = color.dark_grey},
-    honey = {[color.orange] = color.pink, [color.yellow] = color.blue},
+-- palette swaps
+palette = {
+  chars = {
+    {[color.red] = char_colors[1]},
+    {[color.red] = char_colors[2]},
+    {[color.red] = char_colors[3]},
+    {[color.red] = char_colors[4]},
   },
-  {
-    ore = {[color.light_grey] = color.blue, [color.white] = color.white},
-    tree = {[color.green] = color.blue, [color.brown] = color.light_grey},
-    honey = {[color.orange] = color.blue, [color.yellow] = color.peach},
+  node_ranks = {
+    {
+      ore = {
+        [color.light_grey] = color.orange,
+        [color.white] = color.yellow,
+      },
+      tree = {
+        [color.green] = color.orange,
+        [color.brown] = color.dark_grey,
+      },
+      honey = {
+        [color.orange] = color.pink,
+        [color.yellow] = color.blue,
+      },
+    },
+    {
+      ore = {
+        [color.light_grey] = color.blue,
+        [color.white] = color.white,
+      },
+      tree = {
+        [color.green] = color.blue,
+        [color.brown] = color.light_grey,
+      },
+      honey = {
+        [color.orange] = color.blue,
+        [color.yellow] = color.peach,
+      },
+    },
+  },
+
+  tool_ranks = {
+    {
+      [color.light_grey] = color.orange,
+      [color.white] = color.yellow,
+      [color.brown] = color.dark_grey,
+      [color.dark_grey] = color.brown,
+    },
+    {
+      [color.light_grey] = color.dark_blue,
+      [color.white] = color.blue,
+      [color.brown] = color.white,
+      [color.dark_grey] = color.indigo,
+    },
   },
 }
 
@@ -341,9 +400,9 @@ end
 
 function Char:draw()
   -- draw sprite, remapping the red color to this player's color
-  pal(color.red, self.color)
+  set_palette(palette.chars[self.p + 1])
   draw_sprite(self.gfx, self.x, self.y, 1, 1, self.face_left)
-  pal()
+  set_palette()
 
   -- draw our tool if it exists
   if self.tool ~= nil then
@@ -573,32 +632,15 @@ function Tool:init(name, x, y, level)
 end
 
 function Tool:set_palette()
-  if self.level == 1 then
-    pal(color.light_grey, color.orange)
-    pal(color.white, color.yellow)
-    pal(color.brown, color.dark_grey)
-    pal(color.dark_grey, color.brown)
+  if self.level > 0 then
+    set_palette(palette.tool_ranks[self.level])
   end
-
-  if self.level == 2 then
-    pal(color.light_grey, color.dark_blue)
-    pal(color.white, color.blue)
-    pal(color.brown, color.white)
-    pal(color.dark_grey, color.indigo)
-  end
-end
-
-function Tool:reset_palette()
-  palt()
-  pal()
 end
 
 function Tool:draw()
   self:set_palette()
-
   draw_sprite(gfx.tool[self.name], self.x, self.y)
-
-  self:reset_palette()
+  set_palette()
 end
 
 function Tool:draw_held(x, y, face_left)
@@ -609,7 +651,7 @@ function Tool:draw_held(x, y, face_left)
 
   self:set_palette()
   draw_sprite(gfx.tool[self.name], x + offset, y - 2, 1, 1, face_left)
-  self:reset_palette()
+  set_palette()
 end
 
 function Tool:drop(owner)
@@ -717,22 +759,14 @@ end
 
 function Node:set_palette()
   if self.level > 0 then
-    local swap = node_palette_swaps[self.level][self.name]
-    for from, to in pairs(swap) do
-      pal(from, to)
-    end
+    set_palette(palette.node_ranks[self.level][self.name])
   end
-end
-
-function Node:reset_palette()
-  pal()
-  palt()
 end
 
 function Node:draw()
   self:set_palette()
   draw_sprite(gfx.node[self.name], self.x, self.y)
-  self:reset_palette()
+  set_palette()
 end
 
 function Node:spew_particle(amt)
