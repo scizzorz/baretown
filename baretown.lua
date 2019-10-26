@@ -310,7 +310,7 @@ function Char:init(p, x, y)
   self.x = x
   self.y = y
   self.face_left = false
-  self.spr = gfx.char.walk
+  self.gfx = gfx.char.walk
   self.color = char_colors[self.p + 1]
   self.tool = nil
   self.menu = false
@@ -342,7 +342,7 @@ end
 function Char:draw()
   -- draw sprite, remapping the red color to this player's color
   pal(color.red, self.color)
-  draw_sprite(self.spr, self.x, self.y, 1, 1, self.face_left)
+  draw_sprite(self.gfx, self.x, self.y, 1, 1, self.face_left)
   pal()
 
   -- draw our tool if it exists
@@ -486,6 +486,13 @@ function Char:update_world()
   if move == "left" then dx = -1 end
   if move == "right" then dx = 1 end
   self:move(dx, dy)
+
+  -- animate correctly
+  if dx == 0 and dy == 0 then
+    self.gfx = gfx.char.stand
+  else
+    self.gfx = gfx.char.walk
+  end
 
   -- pick up or drop tools
   if btnp(button.o, self.p) then
