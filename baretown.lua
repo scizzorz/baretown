@@ -18,7 +18,7 @@ colors = {
   peach = 15,
 }
 
-btns = {
+button = {
   left = 0,
   right = 1,
   up = 2,
@@ -391,7 +391,7 @@ function Char:check_buttons()
 end
 
 function Char:check_button(name)
-  if btn(btns[name], self.p) then
+  if btn(button[name], self.p) then
     -- if this is the first frame we've seen this button press, save the
     -- frame number and add it to our button press stack.
     -- this is nested because we don't want to reset it until the
@@ -419,7 +419,7 @@ function Char:top_button()
 end
 
 function Char:update()
-  self.menu = btn(btns.o, self.p) and btn(btns.x, self.p)
+  self.menu = btn(button.o, self.p) and btn(button.x, self.p)
 
   if self.menu then
     self:update_menu()
@@ -444,7 +444,7 @@ function Char:update_world()
   self:move(dx, dy)
 
   -- pick up or drop tools
-  if btnp(btns.o, self.p) then
+  if btnp(button.o, self.p) then
     -- drop held tool
     if self.tool ~= nil then
       add(tools, self.tool)
@@ -471,7 +471,7 @@ function Char:update_world()
   end
 
   -- use our tool
-  if btnp(btns.x, self.p) then
+  if btnp(button.x, self.p) then
     if self.tool ~= nil then
       if not self.tool:use(self) then
         sfx(sfx_list.err, sfx_channels.tool)
