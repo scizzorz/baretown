@@ -925,15 +925,17 @@ function _draw()
     end
   end
 
-  local mem = flr(stat(0) * 100 / 512)
-  local cpu = flr(stat(1) * 100)
-  local sys = flr(stat(2) * 100)
-  print("mem " .. mem, 1, 1, colors.black)
-  print("mem " .. mem, 0, 0, colors.white)
+  if false then
+    local mem = flr(stat(0) * 100 / 512)
+    local cpu = flr(stat(1) * 100)
+    local sys = flr(stat(2) * 100)
+    print("mem " .. mem, 1, 1, colors.black)
+    print("mem " .. mem, 0, 0, colors.white)
 
-  print("cpu " .. cpu, 1, 9, colors.black)
-  print("cpu " .. cpu, 0, 8, colors.white)
+    print("cpu " .. cpu, 1, 9, colors.black)
+    print("cpu " .. cpu, 0, 8, colors.white)
 
-  print("sys " .. sys, 1, 17, colors.black)
-  print("sys " .. sys, 0, 16, colors.white)
+    print("sys " .. sys, 1, 17, colors.black)
+    print("sys " .. sys, 0, 16, colors.white)
+  end
 end
