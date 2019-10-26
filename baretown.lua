@@ -1,5 +1,5 @@
 printh("booting --------------------------------------------------------------", "log")
-colors = {
+color = {
   black = 0,
   dark_blue = 1,
   dark_purple = 2,
@@ -28,10 +28,10 @@ button = {
 }
 
 char_colors = {
-  colors.red,
-  colors.blue,
-  colors.green,
-  colors.yellow,
+  color.red,
+  color.blue,
+  color.green,
+  color.yellow,
 }
 
 tool_sprites = {
@@ -103,14 +103,14 @@ node_sprites = {
 
 node_palette_swaps = {
   {
-    ore = {[colors.light_grey] = colors.orange, [colors.white] = colors.yellow},
-    tree = {[colors.green] = colors.orange, [colors.brown] = colors.dark_grey},
-    honey = {[colors.orange] = colors.pink, [colors.yellow] = colors.blue},
+    ore = {[color.light_grey] = color.orange, [color.white] = color.yellow},
+    tree = {[color.green] = color.orange, [color.brown] = color.dark_grey},
+    honey = {[color.orange] = color.pink, [color.yellow] = color.blue},
   },
   {
-    ore = {[colors.light_grey] = colors.blue, [colors.white] = colors.white},
-    tree = {[colors.green] = colors.blue, [colors.brown] = colors.light_grey},
-    honey = {[colors.orange] = colors.blue, [colors.yellow] = colors.peach},
+    ore = {[color.light_grey] = color.blue, [color.white] = color.white},
+    tree = {[color.green] = color.blue, [color.brown] = color.light_grey},
+    honey = {[color.orange] = color.blue, [color.yellow] = color.peach},
   },
 }
 
@@ -128,7 +128,7 @@ spawnable_nodes = {
 
 char_walk = {10, 26, 10, 42}
 
-split_sep_color = colors.dark_blue
+split_sep_color = color.dark_blue
 ui_arrow = 110
 impassable_flag = 0
 permanent_flag = 1
@@ -295,7 +295,7 @@ end
 
 function Char:draw()
   -- draw sprite, remapping the red color to this player's color
-  pal(colors.red, self.color)
+  pal(color.red, self.color)
   draw_sprite(self.spr, self.x, self.y, 1, 1, self.face_left)
   pal()
 
@@ -308,30 +308,28 @@ end
 function Char:draw_menu()
   -- draw menu if we have it open
   if self.menu then
-    color(colors.dark_blue)
-    rectfill(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry)
-    color(colors.light_grey)
-    rect(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry)
+    rectfill(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry, color.dark_blue)
+    rect(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry, color.light_grey)
 
     draw_sprite(ui_arrow, 4 + self.scrx, 6 + self.scry)
     draw_sprite(loot_sprites.ore, 12 + self.scrx, 8 + self.scry)
-    print(inv.ore, 18 + self.scrx, 8 + self.scry, colors.white)
+    print(inv.ore, 18 + self.scrx, 8 + self.scry, color.white)
     draw_sprite(loot_sprites.tree, 26 + self.scrx, 8 + self.scry)
-    print(inv.tree, 32 + self.scrx, 8 + self.scry, colors.white)
+    print(inv.tree, 32 + self.scrx, 8 + self.scry, color.white)
     draw_sprite(loot_sprites.honey, 40 + self.scrx, 8 + self.scry)
-    print(inv.honey, 46 + self.scrx, 8 + self.scry, colors.white)
+    print(inv.honey, 46 + self.scrx, 8 + self.scry, color.white)
 
     for i, char in pairs(chars) do
-      pal(colors.white, char_colors[i])
+      pal(color.white, char.color)
       draw_sprite(ui_arrow, 4 + self.scrx, 6 + self.scry + i * 11)
       pal()
 
       draw_sprite(loot_sprites.ore, 12 + self.scrx, 8 + self.scry + i * 11)
-      print(char.inv.ore, 18 + self.scrx, 8 + self.scry + i * 11, colors.white)
+      print(char.inv.ore, 18 + self.scrx, 8 + self.scry + i * 11, color.white)
       draw_sprite(loot_sprites.tree, 26 + self.scrx, 8 + self.scry + i * 11)
-      print(char.inv.tree, 32 + self.scrx, 8 + self.scry + i * 11, colors.white)
+      print(char.inv.tree, 32 + self.scrx, 8 + self.scry + i * 11, color.white)
       draw_sprite(loot_sprites.honey, 40 + self.scrx, 8 + self.scry + i * 11)
-      print(char.inv.honey, 46 + self.scrx, 8 + self.scry + i * 11, colors.white)
+      print(char.inv.honey, 46 + self.scrx, 8 + self.scry + i * 11, color.white)
     end
   end
 end
@@ -514,17 +512,17 @@ end
 
 function Tool:set_palette()
   if self.level == 1 then
-    pal(colors.light_grey, colors.orange)
-    pal(colors.white, colors.yellow)
-    pal(colors.brown, colors.dark_grey)
-    pal(colors.dark_grey, colors.brown)
+    pal(color.light_grey, color.orange)
+    pal(color.white, color.yellow)
+    pal(color.brown, color.dark_grey)
+    pal(color.dark_grey, color.brown)
   end
 
   if self.level == 2 then
-    pal(colors.light_grey, colors.dark_blue)
-    pal(colors.white, colors.blue)
-    pal(colors.brown, colors.white)
-    pal(colors.dark_grey, colors.indigo)
+    pal(color.light_grey, color.dark_blue)
+    pal(color.white, color.blue)
+    pal(color.brown, color.white)
+    pal(color.dark_grey, color.indigo)
   end
 end
 
@@ -611,14 +609,14 @@ function Bucket:set_palette()
 
   -- buckets use black as the "empty" color, so
   -- green is set as the transparency color
-  palt(colors.black, false)
-  palt(colors.green, true)
+  palt(color.black, false)
+  palt(color.green, true)
 
   -- then red is swapped out to our "empty" color
   if self.filled then
-    pal(colors.red, colors.blue)
+    pal(color.red, color.blue)
   else
-    pal(colors.red, colors.black)
+    pal(color.red, color.black)
   end
 end
 
@@ -661,8 +659,8 @@ function Node:spew_particle(amt)
   local sy = flr(node_sprites[self.name] / 16) * 8
 
   for n=0, (amt or 1) do
-    local c = colors.black
-    while c == colors.black do
+    local c = color.black
+    while c == color.black do
       c = sget(sx + rnd(8), sy + rnd(8))
     end
     local pt = Particle(c, self.x + 4, self.y + 4)
@@ -957,20 +955,20 @@ function _draw()
     end
 
     -- draw town indicator
-    draw_tracker(me, town, box, colors.white)
+    draw_tracker(me, town, box, color.white)
   end
 
   if false then
     local mem = flr(stat(0) * 100 / 512)
     local cpu = flr(stat(1) * 100)
     local sys = flr(stat(2) * 100)
-    print("mem " .. mem, 1, 1, colors.black)
-    print("mem " .. mem, 0, 0, colors.white)
+    print("mem " .. mem, 1, 1, color.black)
+    print("mem " .. mem, 0, 0, color.white)
 
-    print("cpu " .. cpu, 1, 9, colors.black)
-    print("cpu " .. cpu, 0, 8, colors.white)
+    print("cpu " .. cpu, 1, 9, color.black)
+    print("cpu " .. cpu, 0, 8, color.white)
 
-    print("sys " .. sys, 1, 17, colors.black)
-    print("sys " .. sys, 0, 16, colors.white)
+    print("sys " .. sys, 1, 17, color.black)
+    print("sys " .. sys, 0, 16, color.white)
   end
 end
