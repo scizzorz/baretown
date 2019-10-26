@@ -231,9 +231,33 @@ function Char:init(p, x, y)
   self.btnstack = {}
 end
 
-function Char:set_clip()
-  clip(self.scrx, self.scry, self.scrx + 64, self.scry + 64)
-  camera(self.x - self.scrx - 28, self.y - self.scry - 28)
+function Char:set_clip(p, num)
+  if num == 1 then
+    clip()
+    camera(self.x - 60, self.y - 60)
+  elseif num == 2 then
+    local scry = p * 64
+    clip(0, scry, 128, scry + 64)
+    camera(self.x - 60, self.y - scry - 28)
+  else
+    local scrx = (p % 2) * 64
+    local scry = flr(p / 2) * 64
+    clip(scrx, scry, scrx + 64, scry + 64)
+    camera(self.x - scrx - 28, self.y - scry - 28)
+  end
+end
+
+function Char:draw_border(p, num)
+  if num == 1 then
+    rect(0, 0, 127, 127, split_sep_color)
+  elseif num == 2 then
+    local scry = p * 64
+    rect(0, scry, 127, scry + 63, split_sep_color)
+  else
+    local scrx = (p % 2) * 64
+    local scry = flr(p / 2) * 64
+    rect(scrx, scry, scrx + 63, scry + 63, split_sep_color)
+  end
 end
 
 function Char:reset_clip()
@@ -684,9 +708,9 @@ function Map:draw_for(char)
   -- this is done to save on render time - no need to draw the full 128x64 map
   -- for each character's frame when we can just draw a single 10x10 and cover
   -- their entire screen
-  local mx = flr(char.x / 8) - 4
-  local my = flr(char.y / 8) - 4
-  map(mx, my, mx * 8, my * 8, 11, 11)
+  local mx = flr(char.x / 8) - 8
+  local my = flr(char.y / 8) - 8
+  map(mx, my, mx * 8, my * 8, 19, 19)
 end
 
 -- particle effects
@@ -737,6 +761,7 @@ end
 world = Map()
 nodes = {}
 chars = {}
+chars_enabled = {}
 tools = {}
 particles = {}
 loots = {}
@@ -800,32 +825,35 @@ for x=0, map_w - 1 do
   end
 end
 
-
--- add(tools, Bucket(center_x, center_y))
-
-for x=0, 1 do
-  for y=0, 1 do
-    local level = 0
-    if rnd(128) < 1 then
-      level = 2
-    elseif rnd(64) < 1 then
-      level = 1
-    end
-
-    local name = startable_tools[flr(rnd(#startable_tools)) + 1]
-    local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
-    add(tools, tool)
+-- create players
+function add_char(p)
+  if chars_enabled[p] then
+    return
   end
+
+  local x = (p % 2)
+  local y = flr(p / 2)
+
+  -- spawn the character
+  chars_enabled[p] = true
+  add(chars, Char(p, center_x - 8 + x * 16, center_y - 8 + y * 16))
+
+  -- spawn a tool for them
+  local level = 0
+  if rnd(128) < 1 then
+    level = 2
+  elseif rnd(64) < 1 then
+    level = 1
+  end
+
+  local name = startable_tools[flr(rnd(#startable_tools)) + 1]
+  local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
+  add(tools, tool)
 end
 
--- create players
-add(chars, Char(0, center_x - 8, center_y - 8))
-add(chars, Char(1, center_x + 8, center_y - 8))
-add(chars, Char(2, center_x - 8, center_y + 8))
-add(chars, Char(3, center_x + 8, center_y + 8))
+add_char(0)
 
 -- game code
-
 function _init()
   cls()
 
@@ -834,6 +862,18 @@ end
 
 function _update60()
   frame += 1
+
+  -- check to see if any new players have pushed a button to join
+  for i = 1, 3 do
+    if not chars_enabled[i] then
+      for j = 0, 5 do
+        if btn(j, i) then
+          add_char(i)
+          break
+        end
+      end
+    end
+  end
 
   for i, char in pairs(chars) do
     char:update()
@@ -862,8 +902,8 @@ function _update60()
 end
 
 function _draw()
-  for _, cam in pairs(chars) do
-    cam:set_clip()
+  for p, cam in pairs(chars) do
+    cam:set_clip(p - 1, #chars)
 
     world:draw_for(cam)
 
@@ -884,7 +924,7 @@ function _draw()
     end
 
     for i, char in pairs(chars) do
-      char:draw()
+      char:draw(i, #chars)
     end
 
     cam:reset_clip()
@@ -892,14 +932,17 @@ function _draw()
     if cam.menu then
       cam:draw_menu()
     end
+
+    cam:draw_border(p - 1, #chars)
   end
 
   -- draw split screen separators
-  rect(0, 0, 63, 63, split_sep_color)
-  rect(64, 0, 127, 63, split_sep_color)
-  rect(0, 64, 63, 127, split_sep_color)
-  rect(64, 64, 127, 127, split_sep_color)
+  -- rect(0, 0, 63, 63, split_sep_color)
+  -- rect(64, 0, 127, 63, split_sep_color)
+  -- rect(0, 64, 63, 127, split_sep_color)
+  -- rect(64, 64, 127, 127, split_sep_color)
 
+  --[[
   -- draw friend trackers
   for i, me in pairs(chars) do
     -- draw friend indicators
@@ -930,6 +973,7 @@ function _draw()
       pset(me.scrx + 32 + offx, me.scry + 32 + offy, colors.white)
     end
   end
+  ]]
 
   if false then
     local mem = flr(stat(0) * 100 / 512)
