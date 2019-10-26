@@ -1,4 +1,20 @@
 printh("booting --------------------------------------------------------------", "log")
+
+-- rename sfx => play_sfx
+-- this lets us use sfx as a table name
+_sfx = sfx
+function play_sfx(n, ...)
+  _sfx(n or -1, ...)
+end
+
+-- rename music => play_music
+-- this lets us use music as a table name
+_music = music
+function play_music(n, ...)
+  _music(n or -1, ...)
+end
+
+-- color palette
 color = {
   black = 0,
   dark_blue = 1,
@@ -18,6 +34,7 @@ color = {
   peach = 15,
 }
 
+-- button
 button = {
   left = 0,
   right = 1,
@@ -25,8 +42,10 @@ button = {
   down = 3,
   o = 4,
   x = 5,
+  start = 6,
 }
 
+-- player colors
 char_colors = {
   color.red,
   color.blue,
@@ -34,41 +53,56 @@ char_colors = {
   color.yellow,
 }
 
-tool_sprites = {
-  pick = 1,
-  axe = 2,
-  sword = 3,
-  bucket = 4,
-  staff = 5,
-  hammer = 6,
-  sickle = 7,
-  anvil = 8,
+-- graphics
+gfx = {
+  tool = {
+    pick = 1,
+    axe = 2,
+    sword = 3,
+    bucket = 4,
+    staff = 5,
+    hammer = 6,
+    sickle = 7,
+    anvil = 8,
+  },
+  node = {
+    ore = 16,
+    tree = 17,
+    honey = 18,
+  },
+  loot = {
+    ore = 32,
+    tree = 33,
+    honey = 34,
+  },
+  char = {
+    stand = 10,
+    walk = {10, 26, 10, 42},
+  },
+  ui = {
+    arrow = 110,
+  },
+  map = {
+    plain = 64,
+    impasse = 65,
+    node = 66, -- drawn behind node spawns
+    decor = {80, 96, 112}, -- randomly strewn throughout world
+  },
 }
 
-spawnable_tools = {
-  "pick",
-  "axe",
-  "sword",
-  "staff",
-  "hammer",
-  "sickle",
-  "anvil",
+-- graphics flags
+flag = {
+  impassable = 0,
+  permanent = 1,
 }
 
-startable_tools = {
-  "pick",
-  "axe",
-  "sword",
-  "staff",
-  "hammer",
-  "sickle",
-}
-
-music_songs = {
+-- songs
+music = {
   main = 0,
 }
 
-sfx_list = {
+-- sound effects
+sfx = {
   pickup_tool = 16,
   drop_tool = 17,
   ore_smack = 18,
@@ -81,24 +115,6 @@ sfx_list = {
 
 sfx_channels = {
   tool = 1,
-}
-
-map_tiles = {
-  plain = 64,
-  impasse = 65,
-  node = 66,
-}
-
-decor_tiles = {
-  80,
-  96,
-  112,
-}
-
-node_sprites = {
-  ore = 16,
-  tree = 17,
-  honey = 18,
 }
 
 node_palette_swaps = {
@@ -114,24 +130,37 @@ node_palette_swaps = {
   },
 }
 
-loot_sprites = {
-  ore = 32,
-  tree = 33,
-  honey = 34,
-}
-
+-- which nodes can spawn throughout the world
 spawnable_nodes = {
   "ore",
   "honey",
   "tree",
 }
 
-char_walk = {10, 26, 10, 42}
+-- which tools can spawn throughout the world
+spawnable_tools = {
+  "pick",
+  "axe",
+  "sword",
+  "staff",
+  "hammer",
+  "sickle",
+  "anvil",
+}
 
+-- which tools can start in town
+startable_tools = {
+  "pick",
+  "axe",
+  "sword",
+  "staff",
+  "hammer",
+  "sickle",
+}
+
+-- color of the screen border
 split_sep_color = color.dark_blue
-ui_arrow = 110
-impassable_flag = 0
-permanent_flag = 1
+
 pickup_dist = 8
 smack_dist = 12
 collect_dist = 6
@@ -264,7 +293,7 @@ function Char:init(p, x, y)
   self.x = x
   self.y = y
   self.face_left = false
-  self.spr = char_walk
+  self.spr = gfx.char.walk
   self.color = char_colors[self.p + 1]
   self.tool = nil
   self.menu = false
@@ -311,24 +340,24 @@ function Char:draw_menu()
     rectfill(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry, color.dark_blue)
     rect(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry, color.light_grey)
 
-    draw_sprite(ui_arrow, 4 + self.scrx, 6 + self.scry)
-    draw_sprite(loot_sprites.ore, 12 + self.scrx, 8 + self.scry)
+    draw_sprite(gfx.ui.arrow, 4 + self.scrx, 6 + self.scry)
+    draw_sprite(gfx.loot.ore, 12 + self.scrx, 8 + self.scry)
     print(inv.ore, 18 + self.scrx, 8 + self.scry, color.white)
-    draw_sprite(loot_sprites.tree, 26 + self.scrx, 8 + self.scry)
+    draw_sprite(gfx.loot.tree, 26 + self.scrx, 8 + self.scry)
     print(inv.tree, 32 + self.scrx, 8 + self.scry, color.white)
-    draw_sprite(loot_sprites.honey, 40 + self.scrx, 8 + self.scry)
+    draw_sprite(gfx.loot.honey, 40 + self.scrx, 8 + self.scry)
     print(inv.honey, 46 + self.scrx, 8 + self.scry, color.white)
 
     for i, char in pairs(chars) do
       pal(color.white, char.color)
-      draw_sprite(ui_arrow, 4 + self.scrx, 6 + self.scry + i * 11)
+      draw_sprite(gfx.ui.arrow, 4 + self.scrx, 6 + self.scry + i * 11)
       pal()
 
-      draw_sprite(loot_sprites.ore, 12 + self.scrx, 8 + self.scry + i * 11)
+      draw_sprite(gfx.loot.ore, 12 + self.scrx, 8 + self.scry + i * 11)
       print(char.inv.ore, 18 + self.scrx, 8 + self.scry + i * 11, color.white)
-      draw_sprite(loot_sprites.tree, 26 + self.scrx, 8 + self.scry + i * 11)
+      draw_sprite(gfx.loot.tree, 26 + self.scrx, 8 + self.scry + i * 11)
       print(char.inv.tree, 32 + self.scrx, 8 + self.scry + i * 11, color.white)
-      draw_sprite(loot_sprites.honey, 40 + self.scrx, 8 + self.scry + i * 11)
+      draw_sprite(gfx.loot.honey, 40 + self.scrx, 8 + self.scry + i * 11)
       print(char.inv.honey, 46 + self.scrx, 8 + self.scry + i * 11, color.white)
     end
   end
@@ -338,7 +367,7 @@ function check_collision(x, y)
   local mx = flr(x / 8)
   local my = flr(y / 8)
   local mtile = mget(mx, my)
-  return fget(mtile, impassable_flag)
+  return fget(mtile, flag.impassable)
 end
 
 function Char:move(dx, dy)
@@ -448,7 +477,7 @@ function Char:update_world()
       add(tools, self.tool)
       self.tool:drop(self)
       self.tool = nil
-      sfx(sfx_list.drop_tool, sfx_channels.tool)
+      play_sfx(sfx.drop_tool, sfx_channels.tool)
 
     -- pick up a new tool
     else
@@ -457,13 +486,13 @@ function Char:update_world()
         if disto(self, tool) < pickup_dist then
           self.tool = tool
           del(tools, tool)
-          sfx(sfx_list.pickup_tool, sfx_channels.tool)
+          play_sfx(sfx.pickup_tool, sfx_channels.tool)
           break
         end
       end
 
       if self.tool == nil then
-        sfx(sfx_list.err, sfx_channels.tool)
+        play_sfx(sfx.err, sfx_channels.tool)
       end
     end
   end
@@ -472,7 +501,7 @@ function Char:update_world()
   if btnp(button.x, self.p) then
     if self.tool ~= nil then
       if not self.tool:use(self) then
-        sfx(sfx_list.err, sfx_channels.tool)
+        play_sfx(sfx.err, sfx_channels.tool)
       end
     else
       local interacted = false
@@ -489,7 +518,7 @@ function Char:update_world()
       end
 
       if not interacted then
-        sfx(sfx_list.err, sfx_channels.tool)
+        play_sfx(sfx.err, sfx_channels.tool)
       end
 
     end
@@ -534,7 +563,7 @@ end
 function Tool:draw()
   self:set_palette()
 
-  draw_sprite(tool_sprites[self.name], self.x, self.y)
+  draw_sprite(gfx.tool[self.name], self.x, self.y)
 
   self:reset_palette()
 end
@@ -546,7 +575,7 @@ function Tool:draw_held(x, y, face_left)
   end
 
   self:set_palette()
-  draw_sprite(tool_sprites[self.name], x + offset, y - 2, 1, 1, face_left)
+  draw_sprite(gfx.tool[self.name], x + offset, y - 2, 1, 1, face_left)
   self:reset_palette()
 end
 
@@ -567,11 +596,11 @@ function Smacker(node_name)
   return function(tool, char)
     for i, node in pairs(nodes) do
       if node.name == node_name and disto(char, node) < smack_dist then
-        sfx(sfx_list[node.name.."_smack"], sfx_channels.tool)
+        play_sfx(sfx[node.name.."_smack"], sfx_channels.tool)
         node:hit(shl(1, tool.level)) -- 2^level
 
         if node:is_dead() then
-          sfx(sfx_list.explode, sfx_channels.tool)
+          play_sfx(sfx.explode, sfx_channels.tool)
           node:explode()
           del(nodes, node)
         end
@@ -592,7 +621,7 @@ tool_uses.hammer = Smacker("ore")
 
 tool_interacts = {}
 tool_interacts.anvil = function()
-  sfx(sfx_list.ore, sfx_channels.tool)
+  play_sfx(sfx.ore, sfx_channels.tool)
   return true
 end
 
@@ -631,7 +660,7 @@ function Node:init(name, x, y, level)
   self.level = level or 0
   self.hp = shl(hp or 8, self.level * 2) -- 8 * 2^(2 * level)
 
-  mset(x / 8, y / 8, map_tiles.node)
+  mset(x / 8, y / 8, gfx.map.node)
 end
 
 function Node:set_palette()
@@ -650,13 +679,13 @@ end
 
 function Node:draw()
   self:set_palette()
-  draw_sprite(node_sprites[self.name], self.x, self.y)
+  draw_sprite(gfx.node[self.name], self.x, self.y)
   self:reset_palette()
 end
 
 function Node:spew_particle(amt)
-  local sx = (node_sprites[self.name] % 16) * 8
-  local sy = flr(node_sprites[self.name] / 16) * 8
+  local sx = (gfx.node[self.name] % 16) * 8
+  local sy = flr(gfx.node[self.name] / 16) * 8
 
   for n=0, (amt or 1) do
     local c = color.black
@@ -698,7 +727,7 @@ function Node:is_dead()
 end
 
 function Node:explode()
-  mset(self.x / 8, self.y / 8, map_tiles.plain)
+  mset(self.x / 8, self.y / 8, gfx.map.plain)
   self:spew_particle(16)
 end
 
@@ -756,7 +785,7 @@ function Loot:init(name, x, y, dx, dy)
 end
 
 function Loot:draw()
-  draw_sprite(loot_sprites[self.name], self.x - 2, self.y - 2)
+  draw_sprite(gfx.loot[self.name], self.x - 2, self.y - 2)
 end
 
 -- game state
@@ -779,11 +808,11 @@ for x=0, map_w - 1 do
   for y=0, map_h - 1 do
     -- only adjust tiles that aren't marked as impassable by the map editor
     local tile = mget(x, y)
-    if not fget(tile, permanent_flag) then
+    if not fget(tile, flag.permanent) then
       -- random decoration tiles
       if rnd(32) < 1 then
-        local decor = flr(rnd(#decor_tiles)) + 1
-        mset(x, y, decor_tiles[decor])
+        local decor = flr(rnd(#gfx.map.decor)) + 1
+        mset(x, y, gfx.map.decor[decor])
 
       -- random node spawns
       elseif rnd(32) < 1 then
@@ -803,7 +832,7 @@ for x=0, map_w - 1 do
       -- random tooll spawn
       elseif rnd(2048) < 1 then
 
-        mset(x, y, map_tiles.plain)
+        mset(x, y, gfx.map.plain)
 
         -- choose a random power level
         local level = 0
@@ -822,7 +851,7 @@ for x=0, map_w - 1 do
 
       -- plain
       else
-        mset(x, y, map_tiles.plain)
+        mset(x, y, gfx.map.plain)
       end
     end
   end
@@ -860,7 +889,7 @@ add_char(0)
 function _init()
   cls()
 
-  -- music(music_songs.main)
+  play_music(music.main and nil)
 end
 
 function _update60()
@@ -895,7 +924,7 @@ function _update60()
       for j, char in pairs(chars) do
         if dist(lt.x, lt.y, char.x + 4, char.y + 4) < collect_dist then
           char.inv[lt.name] += 1
-          sfx(sfx_list.pickup_loot, sfx_channels.tool)
+          play_sfx(sfx.pickup_loot, sfx_channels.tool)
           del(loots, lt)
           break
         end
