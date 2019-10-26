@@ -896,6 +896,8 @@ function _update60()
 end
 
 function _draw()
+  cls()
+
   for p, cam in pairs(chars) do
     cam:set_clip(p - 1, #chars)
 
