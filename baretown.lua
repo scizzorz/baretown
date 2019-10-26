@@ -103,18 +103,35 @@ music = {
 
 -- sound effects
 sfx = {
-  pickup_tool = 16,
-  drop_tool = 17,
-  ore_smack = 18,
-  explode = 19,
-  tree_smack = 20,
-  honey_smack = 21,
+  tool = {
+    pickup = 16,
+    drop = 17,
+    none = 22,
+  },
   err = 22,
-  pickup_loot = 21,
-}
-
-sfx_channels = {
-  tool = 1,
+  die = {
+    ore = 19,
+    tree = 19,
+    honey = 19,
+  },
+  smack = {
+    ore = 18,
+    tree = 20,
+    honey = 21,
+  },
+  loot = {
+    ore = 21,
+    tree = 21,
+    honey = 21,
+  },
+  use = {
+    fail = 22,
+    cant = 22,
+  },
+  interact = {
+    fail = 22,
+    cant = 22,
+  },
 }
 
 node_palette_swaps = {
@@ -477,7 +494,7 @@ function Char:update_world()
       add(tools, self.tool)
       self.tool:drop(self)
       self.tool = nil
-      play_sfx(sfx.drop_tool, sfx_channels.tool)
+      play_sfx(sfx.tool.drop, self.p)
 
     -- pick up a new tool
     else
@@ -486,13 +503,13 @@ function Char:update_world()
         if disto(self, tool) < pickup_dist then
           self.tool = tool
           del(tools, tool)
-          play_sfx(sfx.pickup_tool, sfx_channels.tool)
+          play_sfx(sfx.tool.pickup, self.p)
           break
         end
       end
 
       if self.tool == nil then
-        play_sfx(sfx.err, sfx_channels.tool)
+        play_sfx(sfx.tool.none, self.p)
       end
     end
   end
@@ -500,25 +517,34 @@ function Char:update_world()
   -- use our tool
   if btnp(button.x, self.p) then
     if self.tool ~= nil then
-      if not self.tool:use(self) then
-        play_sfx(sfx.err, sfx_channels.tool)
+      local used = self.tool:use(self)
+
+      -- play appropriate sfx for failures
+      if used == nil then
+        play_sfx(sfx.use.cant, self.p)
+      elseif used == false then
+        play_sfx(sfx.use.fail, self.p)
       end
+
     else
-      local interacted = false
+      local interacted = nil
 
       -- find all grounded tools and see if we can interact with any of them
       for i, tool in pairs(tools) do
-        -- check interact distance
-        if disto(self, tool) < pickup_dist and tool_interacts[tool.name] ~= nil then
-          interacted = tool_interacts[tool.name](tool, self)
-          if interacted then
+        -- check interact distance and then try to use it
+        if disto(self, tool) < pickup_dist then
+          interacted = tool:interact(self)
+          if interacted ~= nil then
             break
           end
         end
       end
 
-      if not interacted then
-        play_sfx(sfx.err, sfx_channels.tool)
+      -- play appropriate sfx for failures
+      if interacted == nil then
+        play_sfx(sfx.interact.cant, self.p)
+      elseif interacted == false then
+        play_sfx(sfx.interact.fail, self.p)
       end
 
     end
@@ -584,23 +610,39 @@ function Tool:drop(owner)
   self.y = owner.y
 end
 
+-- returns true if a tool succeeded
+-- returns false if a tool failed
+-- returns nil if a tool can't be used
 function Tool:use(char)
-  if tool_uses[self.name] ~= nil then
-    return tool_uses[self.name](self, char)
+  if self.uses[self.name] ~= nil then
+    return self.uses[self.name](self, char)
   end
 
-  return false
+  return nil
 end
+
+-- returns true if a tool interaction succeeded
+-- returns false if a tool interaction failed
+-- returns nil if a tool can't be interacted with
+function Tool:interact(char)
+  if self.interactions[self.name] ~= nil then
+    return self.interactions[self.name](self, char)
+  end
+
+  return nil
+end
+
+-- tool interactions
 
 function Smacker(node_name)
   return function(tool, char)
     for i, node in pairs(nodes) do
       if node.name == node_name and disto(char, node) < smack_dist then
-        play_sfx(sfx[node.name.."_smack"], sfx_channels.tool)
+        play_sfx(sfx.smack[node.name], char.p)
         node:hit(shl(1, tool.level)) -- 2^level
 
         if node:is_dead() then
-          play_sfx(sfx.explode, sfx_channels.tool)
+          play_sfx(sfx.die[node.name], char.p)
           node:explode()
           del(nodes, node)
         end
@@ -613,18 +655,21 @@ function Smacker(node_name)
   end
 end
 
-tool_uses = {}
-tool_uses.pick = Smacker("ore")
-tool_uses.sickle = Smacker("honey")
-tool_uses.axe = Smacker("tree")
-tool_uses.hammer = Smacker("ore")
+-- return true if the use/interaction was successful
+-- return false if the use/interaction was a failure
+Tool.uses = {}
+Tool.uses.pick = Smacker("ore")
+Tool.uses.sickle = Smacker("honey")
+Tool.uses.axe = Smacker("tree")
+Tool.uses.hammer = Smacker("ore")
 
-tool_interacts = {}
-tool_interacts.anvil = function()
-  play_sfx(sfx.ore, sfx_channels.tool)
+Tool.interactions = {}
+Tool.interactions.anvil = function(tool, char)
+  play_sfx(sfx.smack.ore, char.p)
   return true
 end
 
+-- bucket has a fancy draw method because it's filled / empty
 
 Bucket = Tool:extend()
 
@@ -777,6 +822,8 @@ function Particle:draw()
 end
 
 
+-- loot
+
 Loot = Particle:extend() -- so what
 
 function Loot:init(name, x, y, dx, dy)
@@ -788,76 +835,7 @@ function Loot:draw()
   draw_sprite(gfx.loot[self.name], self.x - 2, self.y - 2)
 end
 
--- game state
-
-world = Map()
-nodes = {}
-chars = {}
-chars_enabled = {}
-tools = {}
-particles = {}
-loots = {}
-frame = 0
-inv = {
-  ore = 0,
-  tree = 0,
-  honey = 0,
-}
-
-for x=0, map_w - 1 do
-  for y=0, map_h - 1 do
-    -- only adjust tiles that aren't marked as impassable by the map editor
-    local tile = mget(x, y)
-    if not fget(tile, flag.permanent) then
-      -- random decoration tiles
-      if rnd(32) < 1 then
-        local decor = flr(rnd(#gfx.map.decor)) + 1
-        mset(x, y, gfx.map.decor[decor])
-
-      -- random node spawns
-      elseif rnd(32) < 1 then
-        -- choose a random power level
-        local level = 0
-        if rnd(128) < 1 then
-          level = 2
-        elseif rnd(64) < 1 then
-          level = 1
-        end
-
-        -- choose a random node
-        local name = spawnable_nodes[flr(rnd(#spawnable_nodes)) + 1]
-        local node = Node(name, x * 8, y * 8, level)
-        add(nodes, node)
-
-      -- random tooll spawn
-      elseif rnd(2048) < 1 then
-
-        mset(x, y, gfx.map.plain)
-
-        -- choose a random power level
-        local level = 0
-        if rnd(64) < 1 then
-          level = 2
-        elseif rnd(32) < 1 then
-          level = 1
-        end
-
-        -- choose a random tool
-        local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
-        local tool = Tool(name, x * 8, y * 8, level)
-        printh("Spawning a "..name, "log")
-
-        add(tools, tool)
-
-      -- plain
-      else
-        mset(x, y, gfx.map.plain)
-      end
-    end
-  end
-end
-
--- create players
+-- player join
 function add_char(p)
   if chars_enabled[p] then
     return
@@ -869,25 +847,101 @@ function add_char(p)
   -- spawn the character
   chars_enabled[p] = true
   add(chars, Char(p, center_x - 8 + x * 16, center_y - 8 + y * 16))
-
-  -- spawn a tool for them
-  local level = 0
-  if rnd(128) < 1 then
-    level = 2
-  elseif rnd(64) < 1 then
-    level = 1
-  end
-
-  local name = startable_tools[flr(rnd(#startable_tools)) + 1]
-  local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
-  add(tools, tool)
 end
 
-add_char(0)
+-- generate a map
+function build_map()
+  for x=0, map_w - 1 do
+    for y=0, map_h - 1 do
+      -- only adjust tiles that aren't marked as impassable by the map editor
+      local tile = mget(x, y)
+      if not fget(tile, flag.permanent) then
+        -- random decoration tiles
+        if rnd(32) < 1 then
+          local decor = flr(rnd(#gfx.map.decor)) + 1
+          mset(x, y, gfx.map.decor[decor])
+
+        -- random node spawns
+        elseif rnd(32) < 1 then
+          -- choose a random power level
+          local level = 0
+          if rnd(128) < 1 then
+            level = 2
+          elseif rnd(64) < 1 then
+            level = 1
+          end
+
+          -- choose a random node
+          local name = spawnable_nodes[flr(rnd(#spawnable_nodes)) + 1]
+          local node = Node(name, x * 8, y * 8, level)
+          add(nodes, node)
+
+        -- random tooll spawn
+        elseif rnd(2048) < 1 then
+          mset(x, y, gfx.map.plain)
+
+          -- choose a random power level
+          local level = 0
+          if rnd(64) < 1 then
+            level = 2
+          elseif rnd(32) < 1 then
+            level = 1
+          end
+
+          -- choose a random tool
+          local name = spawnable_tools[flr(rnd(#spawnable_tools)) + 1]
+          local tool = Tool(name, x * 8, y * 8, level)
+          printh("Spawning a "..name, "log")
+
+          add(tools, tool)
+
+        -- plain
+        else
+          mset(x, y, gfx.map.plain)
+        end
+      end
+    end
+  end
+end
+
+function spawn_tools()
+  for x = 0, 1 do
+    for y = 0, 1 do
+      local level = 0
+      if rnd(128) < 1 then
+        level = 2
+      elseif rnd(64) < 1 then
+        level = 1
+      end
+
+      local name = startable_tools[flr(rnd(#startable_tools)) + 1]
+      local tool = Tool(name, center_x - 16 + x * 32, center_y - 16 + y * 32, level)
+      add(tools, tool)
+    end
+  end
+end
 
 -- game code
 function _init()
   cls()
+
+  world = Map()
+  nodes = {}
+  chars = {}
+  chars_enabled = {}
+  tools = {}
+  particles = {}
+  loots = {}
+  frame = 0
+  inv = {
+    ore = 0,
+    tree = 0,
+    honey = 0,
+  }
+
+  build_map()
+  spawn_tools()
+  add_char(0)
 
   play_music(music.main and nil)
 end
@@ -924,7 +978,7 @@ function _update60()
       for j, char in pairs(chars) do
         if dist(lt.x, lt.y, char.x + 4, char.y + 4) < collect_dist then
           char.inv[lt.name] += 1
-          play_sfx(sfx.pickup_loot, sfx_channels.tool)
+          play_sfx(sfx.loot[lt.name], char.p)
           del(loots, lt)
           break
         end
