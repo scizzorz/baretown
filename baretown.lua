@@ -126,6 +126,8 @@ spawnable_nodes = {
   "tree",
 }
 
+char_walk = {10, 26, 10, 42}
+
 split_sep_color = colors.dark_blue
 ui_arrow = 110
 impassable_flag = 0
@@ -160,6 +162,14 @@ end
 
 function flr8(x)
   return flr(x / 8)
+end
+
+function draw_sprite(anim, ...)
+  if type(anim) == "table" then
+    local idx = flr(frame * (anim.fps or 10) / 60) % #anim + 1
+    anim = anim[idx]
+  end
+  spr(anim, ...)
 end
 
 -- base class
@@ -208,7 +218,7 @@ function Char:init(p, x, y)
   self.x = x
   self.y = y
   self.face_left = false
-  self.spr = 10
+  self.spr = char_walk
   self.color = char_colors[self.p + 1]
   self.tool = nil
   self.menu = false
@@ -234,7 +244,7 @@ end
 function Char:draw()
   -- draw sprite, remapping the red color to this player's color
   pal(colors.red, self.color)
-  spr(self.spr, self.x, self.y, 1, 1, self.face_left)
+  draw_sprite(self.spr, self.x, self.y, 1, 1, self.face_left)
   pal()
 
   -- draw our tool if it exists
@@ -251,24 +261,24 @@ function Char:draw_menu()
     color(colors.light_grey)
     rect(4 + self.scrx, 4 + self.scry, 60 + self.scrx, 60 + self.scry)
 
-    spr(ui_arrow, 4 + self.scrx, 6 + self.scry)
-    spr(loot_sprites.ore, 12 + self.scrx, 8 + self.scry)
+    draw_sprite(ui_arrow, 4 + self.scrx, 6 + self.scry)
+    draw_sprite(loot_sprites.ore, 12 + self.scrx, 8 + self.scry)
     print(inv.ore, 18 + self.scrx, 8 + self.scry, colors.white)
-    spr(loot_sprites.tree, 26 + self.scrx, 8 + self.scry)
+    draw_sprite(loot_sprites.tree, 26 + self.scrx, 8 + self.scry)
     print(inv.tree, 32 + self.scrx, 8 + self.scry, colors.white)
-    spr(loot_sprites.honey, 40 + self.scrx, 8 + self.scry)
+    draw_sprite(loot_sprites.honey, 40 + self.scrx, 8 + self.scry)
     print(inv.honey, 46 + self.scrx, 8 + self.scry, colors.white)
 
     for i, char in pairs(chars) do
       pal(colors.white, char_colors[i])
-      spr(ui_arrow, 4 + self.scrx, 6 + self.scry + i * 11)
+      draw_sprite(ui_arrow, 4 + self.scrx, 6 + self.scry + i * 11)
       pal()
 
-      spr(loot_sprites.ore, 12 + self.scrx, 8 + self.scry + i * 11)
+      draw_sprite(loot_sprites.ore, 12 + self.scrx, 8 + self.scry + i * 11)
       print(char.inv.ore, 18 + self.scrx, 8 + self.scry + i * 11, colors.white)
-      spr(loot_sprites.tree, 26 + self.scrx, 8 + self.scry + i * 11)
+      draw_sprite(loot_sprites.tree, 26 + self.scrx, 8 + self.scry + i * 11)
       print(char.inv.tree, 32 + self.scrx, 8 + self.scry + i * 11, colors.white)
-      spr(loot_sprites.honey, 40 + self.scrx, 8 + self.scry + i * 11)
+      draw_sprite(loot_sprites.honey, 40 + self.scrx, 8 + self.scry + i * 11)
       print(char.inv.honey, 46 + self.scrx, 8 + self.scry + i * 11, colors.white)
     end
   end
@@ -497,7 +507,7 @@ end
 function Tool:draw()
   self:set_palette()
 
-  spr(tool_sprites[self.name], self.x, self.y)
+  draw_sprite(tool_sprites[self.name], self.x, self.y)
 
   self:reset_palette()
 end
@@ -509,7 +519,7 @@ function Tool:draw_held(x, y, face_left)
   end
 
   self:set_palette()
-  spr(tool_sprites[self.name], x + offset, y - 2, 1, 1, face_left)
+  draw_sprite(tool_sprites[self.name], x + offset, y - 2, 1, 1, face_left)
   self:reset_palette()
 end
 
@@ -613,7 +623,7 @@ end
 
 function Node:draw()
   self:set_palette()
-  spr(node_sprites[self.name], self.x, self.y)
+  draw_sprite(node_sprites[self.name], self.x, self.y)
   self:reset_palette()
 end
 
@@ -719,7 +729,7 @@ function Loot:init(name, x, y, dx, dy)
 end
 
 function Loot:draw()
-  spr(loot_sprites[self.name], self.x - 2, self.y - 2)
+  draw_sprite(loot_sprites[self.name], self.x - 2, self.y - 2)
 end
 
 -- game state
@@ -731,7 +741,6 @@ tools = {}
 particles = {}
 loots = {}
 frame = 0
-aframe = 0
 inv = {
   ore = 0,
   tree = 0,
@@ -809,6 +818,7 @@ for x=0, 1 do
   end
 end
 
+-- create players
 add(chars, Char(0, center_x - 8, center_y - 8))
 add(chars, Char(1, center_x + 8, center_y - 8))
 add(chars, Char(2, center_x - 8, center_y + 8))
@@ -819,15 +829,11 @@ add(chars, Char(3, center_x + 8, center_y + 8))
 function _init()
   cls()
 
-  music(music_songs.main)
+  -- music(music_songs.main)
 end
 
 function _update60()
   frame += 1
-
-  if (frame % 6) == 0 then
-    aframe += 1
-  end
 
   for i, char in pairs(chars) do
     char:update()
