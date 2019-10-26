@@ -235,10 +235,14 @@ function Char:set_clip(p, num)
   if num == 1 then
     clip()
     camera(self.x - 60, self.y - 60)
-  elseif num == 2 then
+  elseif num == 2 or (num == 3 and p == 0) then
     local scry = p * 64
     clip(0, scry, 128, scry + 64)
     camera(self.x - 60, self.y - scry - 28)
+  elseif num == 3 then
+    local scrx = (p - 1) * 64
+    clip(scrx, 64, scrx + 64, 128)
+    camera(self.x - scrx - 28, self.y - 64 - 28)
   else
     local scrx = (p % 2) * 64
     local scry = flr(p / 2) * 64
@@ -250,9 +254,12 @@ end
 function Char:draw_border(p, num)
   if num == 1 then
     rect(0, 0, 127, 127, split_sep_color)
-  elseif num == 2 then
+  elseif num == 2 or (num == 3 and p == 0) then
     local scry = p * 64
     rect(0, scry, 127, scry + 63, split_sep_color)
+  elseif num == 3 then
+    local scrx = (p - 1) * 64
+    rect(scrx, 64, scrx + 63, 127, split_sep_color)
   else
     local scrx = (p % 2) * 64
     local scry = flr(p / 2) * 64
